@@ -1,0 +1,12 @@
+[package]
+name = "salt"
+version = "0.1.0"
+authors = ["Ryan Leckey <leckey.ryan@gmail.com>"]
+
+[dependencies]
+futures = "0.1.14"
+tokio-core = "0.1.9"
+error-chain = "0.10"
+tokio-io = "0.1.2"
+net2 = "0.2.31"
+num_cpus = "1.6.2"
