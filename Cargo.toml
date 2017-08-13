@@ -1,7 +1,14 @@
 [package]
 name = "salt"
-version = "0.1.0"
+version = "0.0.1"
+description = "Salt is a fast, simple, and asynchronous micro web-framework for Rust."
 authors = ["Ryan Leckey <leckey.ryan@gmail.com>"]
+repository = "https://github.com/mehcode/salt"
+license = "MIT/Apache-2.0"
+documentation = "https://docs.rs/salt"
+readme = "README.md"
+keywords = ["salt", "web", "framework", "futures", "tokio", "async", "server", "http", "tcp"]
+categories = ["network-programming", "web-programming::http-server"]
 
 [dependencies]
 futures = "0.1.14"
