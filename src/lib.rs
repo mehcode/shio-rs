@@ -7,27 +7,24 @@ extern crate net2;
 #[macro_use]
 extern crate error_chain;
 
+mod service;
 mod errors;
 
 use std::sync::Arc;
 use std::thread::{self, JoinHandle};
 use std::net::{SocketAddr, ToSocketAddrs};
 use tokio_core::reactor::Core;
-use tokio_core::net::{TcpListener, TcpStream};
+use tokio_core::net::TcpListener;
 use futures::{future, Future, Stream};
 use errors::*;
+use service::Service;
 use net2::TcpBuilder;
 
 #[cfg(unix)]
 use net2::unix::UnixTcpBuilderExt;
 
 #[derive(Default)]
-pub struct Salt<
-    I,
-    F: Future<Item = I, Error = E> + Send,
-    S: Fn(TcpStream) -> F + Sync + Send + 'static,
-    E: ::std::error::Error,
-> {
+pub struct Salt<S: Service + Send + Sync + 'static> {
     /// Service that will handle incoming connections.
     service: Arc<S>,
 
@@ -41,12 +38,7 @@ pub struct Salt<
     children: Vec<JoinHandle<()>>,
 }
 
-impl<I, F: Future<Item = I, Error = E>, S: Fn(TcpStream) -> F, E: ::std::error::Error>
-    Salt<I, F, S, E>
-where
-    F: Send,
-    S: Sync + Send + 'static,
-{
+impl<S: Service + Send + Sync + 'static> Salt<S> {
     pub fn new(service: S) -> Self {
         Salt {
             service: Arc::new(service),
@@ -104,7 +96,7 @@ where
                     work.push(Box::new(
                         clients
                             .map_err::<Box<::std::error::Error>, _>(|err| err.into())
-                            .and_then(|(socket, _)| (service)(socket).from_err())
+                            .and_then(|(socket, _)| service.call(socket).from_err())
                             .into_future()
                             .map(|_| ())
                             .map_err::<_, Box<::std::error::Error>>(|(err, _)| err.into()),
@@ -119,12 +111,7 @@ where
     }
 }
 
-impl<I, F: Future<Item = I, Error = E>, S: Fn(TcpStream) -> F, E: ::std::error::Error> Drop
-    for Salt<I, F, S, E>
-where
-    F: Send,
-    S: Sync + Send + 'static,
-{
+impl<S: Service + Sync + Send + 'static> Drop for Salt<S> {
     fn drop(&mut self) {
         self.close();
     }
