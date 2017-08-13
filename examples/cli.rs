@@ -1,3 +1,5 @@
+//! Example of how a remote CLI session could be implemented.
+
 extern crate salt;
 extern crate tokio_io;
 extern crate tokio_core;
@@ -7,19 +9,18 @@ use std::io::BufReader;
 
 use futures::{Future, Stream};
 use tokio_io::{io, AsyncRead};
-use tokio_core::net::TcpStream;
 
-use salt::Salt;
+use salt::{Context, Salt};
 
 fn main() {
     // By default, Salt will multiplex connections over <num_cpus> threads.
     // TODO: Investigate this behavior. It might be best to be opt-in.
 
-    Salt::new(|stream: TcpStream| {
+    Salt::new(|c: Context| {
         // Split the stream into its reader and writer halves
         // This is needed because `BufReader` would otherwise consume the
         // stream and we'd lose write access
-        let (reader, writer) = stream.split();
+        let (reader, writer) = c.split();
 
         // Write an initial sigil, to show we can accept input
         // Notice that the io:: combinators consume the writer and pass it back
