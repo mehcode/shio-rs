@@ -1,6 +1,6 @@
 [package]
 name = "salt"
-version = "0.0.1"
+version = "0.0.3"
 description = "Salt is a fast, simple, and asynchronous micro web-framework for Rust."
 authors = ["Ryan Leckey <leckey.ryan@gmail.com>"]
 repository = "https://github.com/mehcode/salt"
@@ -18,3 +18,6 @@ net2 = "0.2.31"
 num_cpus = "1.6.2"
 bytes = "0.4.5"
 hyper = "0.11"
+tokio-proto = "0.1.1"
+http = { git = "https://github.com/carllerche/http" }
+regex = "0.2"
