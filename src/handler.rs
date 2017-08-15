@@ -1,20 +1,23 @@
 use futures::Future;
-use context::Context;
-use hyper::{Response, Body};
+use hyper;
 
-pub trait Handler {
-    type Future: Future<Item = Response<Body>>;
+use super::Context;
+
+pub trait Handler: Send + Sync {
+    type Future: Future<Item = hyper::Response>;
 
     fn call(&self, context: Context) -> Self::Future;
 }
 
-impl<E, R, F> Handler for F
+impl<TError, TFuture, TFn> Handler for TFn
 where
-    R: Future<Item = Response<Body>, Error = E>,
-    F: Fn(Context) -> R,
+    TFuture: Future<Item = hyper::Response, Error = TError>,
+    TFn: Send + Sync,
+    TFn: Fn(Context) -> TFuture,
 {
-    type Future = R;
+    type Future = TFuture;
 
+    #[inline]
     fn call(&self, context: Context) -> Self::Future {
         (*self)(context)
     }

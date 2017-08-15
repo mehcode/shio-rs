@@ -38,8 +38,10 @@ impl Router {
 
         // TODO: It probably makes sense to make this router have some sort of compile step..
         // NOTE: The .unwrap cannot fail as we are using route patterns that are pre-verified
-        self.route_patterns.insert(method.clone(),
-            RegexSet::new(routes.iter().map(|r| r.pattern())).unwrap());
+        self.route_patterns.insert(
+            method.clone(),
+            RegexSet::new(routes.iter().map(|r| r.pattern())).unwrap(),
+        );
     }
 
     pub(crate) fn find(&self, method: &Method, path: &str) -> Option<&Route> {
@@ -56,6 +58,7 @@ impl Router {
 impl Handler for Router {
     type Future = Box<Future<Item = Response, Error = hyper::Error>>;
 
+    #[inline]
     fn call(&self, ctx: Context) -> Self::Future {
         // TODO: Return 404 if no route found
 
@@ -63,11 +66,16 @@ impl Handler for Router {
             let req = ctx.request();
 
             // TODO: Find a better place to do this
-            //       Perhaps make a compiled mapping hash map
+            //       Perhaps make a compiled method-method hash map
             let method = match *req.method() {
                 hyper::Method::Get => method::GET,
+                hyper::Method::Post => method::POST,
+                hyper::Method::Put => method::PUT,
+                hyper::Method::Patch => method::PATCH,
 
-                _ => { unimplemented!(); }
+                _ => {
+                    unimplemented!();
+                }
             };
 
             self.find(&method, req.path()).unwrap()

@@ -1,4 +1,4 @@
-use futures::{Poll, Async, Future};
+use futures::{Async, Future, Poll};
 use hyper;
 
 // TODO: Look into simplifying this. I don't like the .take in the Future impl
@@ -11,9 +11,12 @@ pub struct Response {
 
 impl Response {
     pub fn new() -> Response {
-        Response { inner: Some(hyper::Response::new()) }
+        Response {
+            inner: Some(hyper::Response::new()),
+        }
     }
 
+    #[inline]
     pub fn body<B: Into<hyper::Body>>(mut self, body: B) -> Self {
         match self.inner {
             Some(ref mut response) => {
@@ -34,9 +37,18 @@ impl Future for Response {
     type Item = hyper::Response<hyper::Body>;
     type Error = hyper::Error;
 
+    #[inline]
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        let raw_response = self.inner.take().unwrap();
-
-        Ok(Async::Ready(raw_response))
+        Ok(Async::Ready(self.inner.take().expect("cannot poll salt::Response twice")))
     }
+}
+
+/// Trait alias for `Future<Item = hyper::Response>`.
+///
+/// This looks weird because we can't use normal type aliases in a trait bound. Waiting on
+/// https://github.com/rust-lang/rust/issues/41517.
+pub trait FutureResponse: Future<Item = hyper::Response> {
+}
+
+impl<F: Future<Item = hyper::Response, Error = hyper::Error>> FutureResponse for F {
 }

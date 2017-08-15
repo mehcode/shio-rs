@@ -1,14 +1,12 @@
-use std::rc::Rc;
 use std::sync::Arc;
+use std::borrow::Cow;
 
-use http::Method;
 use futures::{future, Future};
-use hyper;
-use hyper::{Response, StatusCode};
-
-use context::Context;
-use handler::Handler;
+use http::method::Method;
+use hyper::{self, Response, StatusCode};
 use regex::Regex;
+
+use super::{Context, Handler};
 
 #[derive(Clone)]
 pub struct Route {
@@ -26,7 +24,7 @@ impl Route {
         Route {
             handler: Arc::new(RouteHandler(handler)),
             // TODO: Does this unwrap make sense?
-            pattern: Regex::new(pattern.as_ref()).unwrap(),
+            pattern: Regex::new(&normalize_pattern(pattern.as_ref())).unwrap(),
             method,
         }
     }
@@ -71,13 +69,41 @@ where
 
     #[inline]
     fn call(&self, ctx: Context) -> Self::Future {
-        Box::new(self.0
-            .call(ctx)
-            .or_else(|_| {
-                // FIXME: Do something with the error argument. Perhaps require at least `:Debug`
-                //        so we can let someone know they hit the default error catcher
+        Box::new(self.0.call(ctx).or_else(|_| {
+            // FIXME: Do something with the error argument. Perhaps require at least `:Debug`
+            //        so we can let someone know they hit the default error catcher
 
-                future::ok(Response::new().with_status(StatusCode::InternalServerError))
-            }))
+            future::ok(Response::new().with_status(StatusCode::InternalServerError))
+        }))
+    }
+}
+
+// Copied initial impl from https://github.com/ubnt-intrepid/susanoo/blob/master/lib/src/router/route.rs#L111
+// TODO: Rework patterns quite a bit so they can support simplified matches
+//       e.g. "/<id>" or "/<filename: .*>"
+fn normalize_pattern(pattern: &str) -> Cow<str> {
+    if pattern == "" {
+        // A pattern of "" means <anything goes> and can be used as final fallback route
+        "".into() }
+    else {
+        let pattern = pattern.trim().trim_left_matches("^").trim_right_matches("$").trim_right_matches("/");
+
+        match pattern {
+            "" => "^/$".into(),
+            s => format!("^{}/?$", s).into(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::normalize_pattern;
+
+    #[test]
+    fn normalize_pattern() {
+        assert_eq!(normalize_pattern(""), "");
+        assert_eq!(normalize_pattern("/"), "^/$");
+        assert_eq!(normalize_pattern("/path/to"), "^/path/to/?$");
+        assert_eq!(normalize_pattern("/path/to/"), "^/path/to/?$");
     }
 }
