@@ -12,7 +12,7 @@ extern crate hyper;
 extern crate futures;
 
 use std::thread;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use salt::prelude::*;
 use hyper::Client;
 
@@ -31,7 +31,7 @@ fn proxy_google(ctx: Context) -> impl FutureResponse {
 
 #[derive(Default)]
 struct HandlerWithState {
-    index: Arc<Mutex<usize>>
+    index: Mutex<usize>,
 }
 
 impl salt::Handler for HandlerWithState {
