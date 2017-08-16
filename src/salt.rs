@@ -31,6 +31,11 @@ impl Salt {
         }
     }
 
+    /// Set the number of threads to use.
+    pub fn threads(&mut self, threads: usize) {
+        self.threads = threads;
+    }
+
     pub fn add<R: Into<Route>>(&mut self, route: R) {
         self.router.add(route.into());
     }
