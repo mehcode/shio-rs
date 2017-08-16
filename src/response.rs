@@ -5,6 +5,7 @@ use hyper;
 //       and the builder impls are very verbose. Should probably use the type system more and
 //       have the compiler yell if someone tries to set the body twice (for instance)
 
+/// Represents an HTTP response.
 pub struct Response {
     inner: Option<hyper::Response<hyper::Body>>,
 }
@@ -16,18 +17,22 @@ impl Response {
         }
     }
 
+    /// Set the `StatusCode` for this response.
+    #[inline]
+    pub fn status(mut self, status_code: hyper::StatusCode) -> Self {
+        self.inner.as_mut().map(|response| {
+            response.set_status(status_code);
+        });
+
+        self
+    }
+
+    /// Set the body for this `Response`.
     #[inline]
     pub fn body<B: Into<hyper::Body>>(mut self, body: B) -> Self {
-        match self.inner {
-            Some(ref mut response) => {
-                response.set_body(body.into());
-            }
-
-            None => {
-                // Do nothing; this response has already been returned to the client
-                // TODO: Perhaps raise an error?
-            }
-        }
+        self.inner.as_mut().map(|response| {
+            response.set_body(body.into());
+        });
 
         self
     }
