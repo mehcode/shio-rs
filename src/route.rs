@@ -2,8 +2,7 @@ use std::sync::Arc;
 use std::borrow::Cow;
 
 use futures::{future, Future};
-use http::method::Method;
-use hyper::{self, Response, StatusCode};
+use hyper::{self, Method, Response, StatusCode};
 use regex::Regex;
 
 use super::{Context, Handler};

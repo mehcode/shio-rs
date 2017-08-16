@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
-use http::{method, Method};
-use hyper::{self, Response};
-use futures::Future;
+use hyper::{self, Method, StatusCode, Response};
+use futures::{future, Future};
 
 use route::Route;
 use handler::Handler;
@@ -60,25 +59,12 @@ impl Handler for Router {
 
     #[inline]
     fn call(&self, ctx: Context) -> Self::Future {
-        // TODO: Return 404 if no route found
-
-        let route = {
-            let req = ctx.request();
-
-            // TODO: Find a better place to do this
-            //       Perhaps make a compiled method-method hash map
-            let method = match *req.method() {
-                hyper::Method::Get => method::GET,
-                hyper::Method::Post => method::POST,
-                hyper::Method::Put => method::PUT,
-                hyper::Method::Patch => method::PATCH,
-
-                _ => {
-                    unimplemented!();
-                }
-            };
-
-            self.find(&method, req.path()).unwrap()
+        let route = match self.find(ctx.method(), ctx.path()) {
+            Some(route) => route,
+            None => {
+                // Return 404 if we failed to find a matching route
+                return Box::new(future::ok(Response::new().with_status(StatusCode::NotFound)));
+            }
         };
 
         route.call(ctx)
