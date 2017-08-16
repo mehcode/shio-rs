@@ -3,7 +3,7 @@ use std::net::{SocketAddr, ToSocketAddrs};
 use std::thread;
 
 use num_cpus;
-use futures::{Future, Stream};
+use futures::{future, Future, Stream};
 use hyper;
 use hyper::server::Http;
 use tokio_core::net::TcpListener;
@@ -13,21 +13,18 @@ use net2::TcpBuilder;
 #[cfg(unix)]
 use net2::unix::UnixTcpBuilderExt;
 
-use context::Context;
-use router::Router;
-use route::Route;
-use handler::Handler;
+use super::{Route, Handler, Context, Router, StatusCode, Response};
 
-pub struct Salt {
-    router: Router,
+pub struct Salt<H: Handler + 'static> {
+    handler: H,
     threads: usize,
 }
 
-impl Salt {
-    pub fn new() -> Self {
+impl<H: Handler> Salt<H> {
+    pub fn new(handler: H) -> Self {
         Salt {
+            handler: handler,
             threads: num_cpus::get(),
-            router: Default::default(),
         }
     }
 
@@ -36,27 +33,24 @@ impl Salt {
         self.threads = threads;
     }
 
-    pub fn add<R: Into<Route>>(&mut self, route: R) {
-        self.router.add(route.into());
-    }
-
-    pub fn run<A: ToSocketAddrs>(&mut self, addr: A) {
+    pub fn run<A: ToSocketAddrs>(self, addr: A) {
         // FIXME: Bind to _all_ addresses asked for
         // FIXME: Return a Result on failure instead of all these unwraps
 
         let addr0 = addr.to_socket_addrs().unwrap().collect::<Vec<_>>()[0];
-        let router = Arc::new(self.router.clone());
+        // let router = Arc::new(self.router.clone());
         let mut children = Vec::new();
+        let handler = Arc::new(self.handler);
 
         for _ in 0..self.threads {
-            let router = router.clone();
+            let handler = handler.clone();
 
             children.push(thread::spawn(move || {
                 let mut core = Core::new().unwrap();
                 let handle = core.handle();
 
                 let service = Service {
-                    router,
+                    handler: handler,
                     handle: handle.clone(),
                 };
 
@@ -97,19 +91,43 @@ impl Salt {
     }
 }
 
-#[derive(Clone)]
-struct Service {
-    router: Arc<Router>,
+impl Default for Salt<Router> {
+    fn default() -> Self {
+        Salt::new(Router::new())
+    }
+}
+
+impl Salt<Router> {
+    pub fn add<R: Into<Route>>(&mut self, route: R) {
+        self.handler.add(route.into());
+    }
+}
+
+struct Service<H: Handler + 'static> {
+    handler: Arc<H>,
     handle: Handle,
 }
 
-impl hyper::server::Service for Service {
+impl<H: Handler + 'static> Service<H> {
+    fn clone(&self) -> Self {
+        Service { handler: self.handler.clone(), handle: self.handle.clone() }
+    }
+}
+
+impl<H: Handler + 'static> hyper::server::Service for Service<H> {
     type Request = hyper::Request;
     type Response = hyper::Response;
     type Error = hyper::Error;
     type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, request: Self::Request) -> Self::Future {
-        self.router.call(Context::new(request, self.handle.clone()))
+        let ctx = Context::new(request, self.handle.clone());
+
+        Box::new(self.handler.call(ctx).or_else(|_| {
+            // FIXME: Do something with the error argument. Perhaps require at least `:Debug`
+            //        so we can let someone know they hit the default error catcher
+
+            Response::new().status(StatusCode::InternalServerError)
+        }))
     }
 }

@@ -1,7 +1,7 @@
 #![feature(conservative_impl_trait)]
 
 // [x] Fix response type problem for handlers
-// [ ] Make generic over "Handler" (and have default be with the router)
+// [x] Make generic over "Handler" (and have default be with the router)
 // [x] Expose request properties on context
 // [ ] Provide `Context::spawn` (threadpool)
 // [ ] Bind all addresses
@@ -51,7 +51,7 @@ impl salt::Handler for HandlerWithState {
 }
 
 fn main() {
-    let mut s = Salt::new();
+    let mut s = Salt::default();
 
     s.add((Method::Get, "/", index));
     s.add((Method::Get, "/google", proxy_google));

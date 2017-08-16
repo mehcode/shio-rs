@@ -16,6 +16,7 @@ pub use response::{Response, FutureResponse};
 pub use salt::Salt;
 pub use context::Context;
 pub use route::Route;
+pub use router::Router;
 pub use handler::Handler;
 pub use hyper::{Method, StatusCode};
 

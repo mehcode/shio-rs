@@ -25,7 +25,12 @@ pub struct Router {
 }
 
 impl Router {
-    pub(crate) fn add(&mut self, route: Route) {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    pub fn add<R: Into<Route>>(&mut self, route: R) {
+        let route: Route = route.into();
         let method = route.method().clone();
 
         self.routes
