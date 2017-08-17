@@ -3,7 +3,7 @@ use std::net::{SocketAddr, ToSocketAddrs};
 use std::thread;
 
 use num_cpus;
-use futures::{future, Future, Stream};
+use futures::{Future, Stream};
 use hyper;
 use hyper::server::Http;
 use tokio_core::net::TcpListener;
