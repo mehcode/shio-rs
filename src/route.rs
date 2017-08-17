@@ -1,17 +1,16 @@
-use std::sync::Arc;
 use std::borrow::Cow;
 
-use futures::{future, Future};
-use hyper::{self, Method, Response, StatusCode};
+use futures::Future;
+use hyper::{self, Method};
 use regex::Regex;
 
-use super::{Context, Handler};
+use super::{Context, Handler, BoxHandler};
 
-#[derive(Clone)]
+//#[derive(Clone)]
 pub struct Route {
     method: Method,
     pattern: Regex,
-    handler: Arc<Handler<Future = Box<Future<Item = Response, Error = hyper::Error>>>>,
+    handler: BoxHandler,
 }
 
 impl Route {
@@ -21,7 +20,7 @@ impl Route {
         H: Handler + 'static,
     {
         Route {
-            handler: Arc::new(RouteHandler(handler)),
+            handler: handler.boxed(),
             // TODO: Does this unwrap make sense?
             pattern: Regex::new(&normalize_pattern(pattern.as_ref())).unwrap(),
             method,
@@ -50,30 +49,11 @@ where
 }
 
 impl Handler for Route {
-    type Future = Box<Future<Item = Response, Error = hyper::Error>>;
+    type Future = Box<Future<Item = hyper::Response, Error = hyper::Error>>;
 
     #[inline]
     fn call(&self, ctx: Context) -> Self::Future {
         self.handler.call(ctx)
-    }
-}
-
-struct RouteHandler<H: Handler>(H);
-
-impl<H: Handler> Handler for RouteHandler<H>
-where
-    <H as Handler>::Future: 'static,
-{
-    type Future = Box<Future<Item = Response, Error = hyper::Error>>;
-
-    #[inline]
-    fn call(&self, ctx: Context) -> Self::Future {
-        Box::new(self.0.call(ctx).or_else(|_| {
-            // FIXME: Do something with the error argument. Perhaps require at least `:Debug`
-            //        so we can let someone know they hit the default error catcher
-
-            future::ok(Response::new().with_status(StatusCode::InternalServerError))
-        }))
     }
 }
 

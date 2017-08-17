@@ -36,6 +36,16 @@ impl Response {
 
         self
     }
+
+    /// Set a [`Header`] for this `Response`.
+    #[inline]
+    pub fn header<H: hyper::header::Header>(mut self, header: H) -> Self {
+        self.inner.as_mut().map(|response| {
+            response.headers_mut().set(header)
+        });
+
+        self
+    }
 }
 
 impl Future for Response {
@@ -47,6 +57,8 @@ impl Future for Response {
         Ok(Async::Ready(self.inner.take().expect("cannot poll salt::Response twice")))
     }
 }
+
+pub type BoxFutureResponse = Box<Future<Item = hyper::Response, Error = hyper::Error>>;
 
 /// Trait alias for `Future<Item = hyper::Response>`.
 ///

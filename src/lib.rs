@@ -5,20 +5,22 @@ extern crate regex;
 extern crate num_cpus;
 extern crate net2;
 
-pub mod context;
-pub mod handler;
-pub mod route;
-pub mod router;
-pub mod salt;
-pub mod response;
+mod context;
+mod handler;
+mod route;
+mod router;
+mod salt;
+mod response;
+mod stack;
 
-pub use response::{Response, FutureResponse};
+pub use response::{Response, FutureResponse, BoxFutureResponse};
 pub use salt::Salt;
 pub use context::Context;
 pub use route::Route;
 pub use router::Router;
-pub use handler::Handler;
-pub use hyper::{Method, StatusCode};
+pub use handler::{Handler, BoxHandler};
+pub use hyper::{Method, StatusCode, header};
+pub use stack::{Stack, StackHandler};
 
 pub mod prelude {
     pub use super::{
@@ -28,6 +30,7 @@ pub mod prelude {
         FutureResponse,
         Method,
         StatusCode,
+        header,
     };
 
     pub use futures::Future;
