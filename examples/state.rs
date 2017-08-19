@@ -20,9 +20,5 @@ impl salt::Handler for HandlerWithState {
 }
 
 fn main() {
-    let mut s = Salt::default();
-
-    s.add((Method::Get, "/", HandlerWithState::default()));
-
-    s.run("127.0.0.1:7878");
+    Salt::default().route((Method::Get, "/", HandlerWithState::default())).run(":7878").unwrap();
 }

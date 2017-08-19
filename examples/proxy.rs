@@ -16,9 +16,5 @@ fn proxy_google(ctx: Context) -> impl FutureResponse {
 }
 
 fn main() {
-    let mut s = Salt::default();
-
-    s.add((Method::Get, "/", proxy_google));
-
-    s.run("127.0.0.1:7878");
+    Salt::default().route((Method::Get, "/", proxy_google)).run(":7878").unwrap();
 }
