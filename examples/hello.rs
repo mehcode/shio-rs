@@ -2,20 +2,45 @@ extern crate salt;
 
 use salt::prelude::*;
 
+// Simple requests should be simple, even in the face of asynchronous design.
 fn index(_: Context) -> Response {
-    // Simple requests should be simple
-    Response::new().body("Hello World!\n")
+    // `Response::with( ... )` accepts an instance that implements `salt::Responder`
+    // The implementation for &str will set the body of the response and
+    // the Content-Length header.
+    Response::with("Hello World!\n")
+
+    // This would be equivalent:
+
+    /*
+    const PHRASE: &str = "Hello World\n";
+
+    Response::new()
+        .body(PHRASE)
+        .header(header::ContentLength(PHRASE.len() as u64))
+    */
+
+    // The default status code is `Status::Ok` (200).
 }
 
 fn main() {
-    let mut s = Salt::default();
+    // Construct a _default_ `Salt` service, mount the `index` handler, and
+    // run indefinitely on port `7878` (by default, binds to both `0.0.0.0` and `::0`).
+    Salt::default().route((Method::Get, "/", index)).run(":7878").unwrap();
 
-    s.add((Method::Get, "/", index));
+    // Salt services have an entry `Handler` that must be defined.
+    // `Salt::default` constructs a `Salt` service with `salt::Router` as its entry `Handler`.
 
-    // Set the number of threads to use.
-    // By default, this is 1 in debug builds and <num_cpus> in release builds.
-    s.threads(8);
+    // This would be equivalent:
 
-    // Run the server indefinitely on the given address.
-    s.run("127.0.0.1:7878");
+    /*
+
+    let mut router = Salt::Router::new();
+
+    router.mount((Method::Get, "/", index));
+
+    let mut service = Salt::new(router);
+
+    service.run(":7878").unwrap();
+
+    */
 }
