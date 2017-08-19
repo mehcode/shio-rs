@@ -98,8 +98,12 @@ impl Default for Salt<Router> {
 }
 
 impl Salt<Router> {
-    pub fn add<R: Into<Route>>(&mut self, route: R) {
-        self.handler.add(route.into());
+    pub fn route<R: Into<Route>>(&mut self, route: R) -> &mut Self {
+        Arc::get_mut(&mut self.handler).map(|router| {
+            router.route(route)
+        });
+
+        self
     }
 }
 
