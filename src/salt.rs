@@ -1,9 +1,10 @@
 use std::sync::Arc;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::thread;
+use std::io;
 
 use num_cpus;
-use futures::{Future, Stream};
+use futures::{future, Future, Stream};
 use hyper::{self, StatusCode};
 use hyper::server::Http;
 use tokio_core::net::TcpListener;
@@ -37,19 +38,17 @@ impl<H: Handler> Salt<H> {
         self.threads = threads;
     }
 
-    pub fn run<A: ToSocketAddrs>(&self, addr: A) -> Result<(), ListenError> {
-        // FIXME: Bind to _all_ addresses asked for
-        // FIXME: Return a Result on failure instead of all these unwraps
-
-        let addr0 = addr.to_socket_addrs().unwrap().collect::<Vec<_>>()[0];
-        // let handler = self.handler.lock().unwrap().clone();
+    pub fn run<A: ToSocketAddrsExt>(&self, addr: A) -> Result<(), ListenError> {
+        let addrs = addr.to_socket_addrs_ext()?.collect::<Vec<_>>();
         let mut children = Vec::new();
 
         for _ in 0..self.threads {
+            let addrs = addrs.clone();
             let handler = self.handler.clone();
 
             children.push(thread::spawn(move || -> Result<(), ListenError> {
                 let mut core = Core::new()?;
+                let mut work = Vec::new();
                 let handle = core.handle();
 
                 let service = Service {
@@ -57,35 +56,42 @@ impl<H: Handler> Salt<H> {
                     handle: handle.clone(),
                 };
 
-                let builder = (match addr0 {
-                    SocketAddr::V4(_) => TcpBuilder::new_v4(),
-                    SocketAddr::V6(_) => TcpBuilder::new_v6(),
-                })?;
+                for addr in &addrs {
+                    let handle = handle.clone();
+                    let builder = (match *addr {
+                        SocketAddr::V4(_) => TcpBuilder::new_v4(),
+                        SocketAddr::V6(_) => TcpBuilder::new_v6(),
+                    })?;
 
-                // Set SO_REUSEADDR on the socket
-                builder.reuse_address(true)?;
+                    // Set SO_REUSEADDR on the socket
+                    builder.reuse_address(true)?;
 
-                // Set SO_REUSEPORT on the socket (in unix)
-                #[cfg(unix)]
-                builder.reuse_port(true)?;
+                    // Set SO_REUSEPORT on the socket (in unix)
+                    #[cfg(unix)]
+                    builder.reuse_port(true)?;
 
-                builder.bind(&addr0)?;
+                    builder.bind(&addr)?;
 
-                let listener = TcpListener::from_listener(
-                    // TODO: Should this be configurable somewhere?
-                    builder.listen(128)?,
-                    &addr0,
-                    &core.handle(),
-                )?;
+                    let listener = TcpListener::from_listener(
+                        // TODO: Should this be configurable somewhere?
+                        builder.listen(128)?,
+                        &addr,
+                        &handle,
+                    )?;
 
-                let protocol = Http::new();
-                let srv = listener.incoming().for_each(|(socket, addr)| {
-                    protocol.bind_connection(&handle, socket, addr, service.clone());
+                    let protocol = Http::new();
+                    let service = service.clone();
 
-                    Ok(())
-                });
+                    let srv = listener.incoming().for_each(move |(socket, addr)| {
+                        protocol.bind_connection(&handle, socket, addr, service.clone());
 
-                core.run(srv)?;
+                        Ok(())
+                    });
+
+                    work.push(srv);
+                }
+
+                core.run(future::join_all(work))?;
 
                 Ok(())
             }));
@@ -145,5 +151,88 @@ impl<H: Handler + 'static> hyper::server::Service for Service<H> {
 
             Response::new().status(StatusCode::InternalServerError)
         }))
+    }
+}
+
+/// An extension of [`ToSocketAddrs`] that allows for a default address when specifying just
+/// the port as `:8080`.
+pub trait ToSocketAddrsExt {
+    type Iter: Iterator<Item = SocketAddr>;
+
+    fn to_socket_addrs_ext(&self) -> io::Result<Self::Iter>;
+}
+
+impl<'a> ToSocketAddrsExt for &'a str {
+    type Iter = <str as ToSocketAddrs>::Iter;
+
+    fn to_socket_addrs_ext(&self) -> io::Result<Self::Iter> {
+        if self.starts_with(':') {
+            // If we start with `:`; assume the ip is ommitted and this is just a port
+            // specification
+            let port: u16 = self[1..].parse().unwrap();
+            Ok((&[
+                SocketAddr::new("0.0.0.0".parse().unwrap(), port),
+                SocketAddr::new("::0".parse().unwrap(), port),
+            ][..]).to_socket_addrs()?.collect::<Vec<_>>().into_iter())
+        } else {
+            self.to_socket_addrs()
+        }
+    }
+}
+
+impl ToSocketAddrsExt for String {
+    type Iter = <String as ToSocketAddrs>::Iter;
+
+    fn to_socket_addrs_ext(&self) -> io::Result<Self::Iter> {
+        (&**self).to_socket_addrs_ext()
+    }
+}
+
+macro_rules! forward_to_socket_addrs {
+    ($lifetime:tt, $ty:ty) => (
+        impl<$lifetime> ToSocketAddrsExt for $ty {
+            type Iter = <$ty as ToSocketAddrs>::Iter;
+
+            fn to_socket_addrs_ext(&self) -> io::Result<Self::Iter> {
+                self.to_socket_addrs()
+            }
+        }
+    );
+
+    ($ty:ty) => (
+        impl ToSocketAddrsExt for $ty {
+            type Iter = <$ty as ToSocketAddrs>::Iter;
+
+            fn to_socket_addrs_ext(&self) -> io::Result<Self::Iter> {
+                self.to_socket_addrs()
+            }
+        }
+    );
+}
+
+forward_to_socket_addrs!('a, &'a [SocketAddr]);
+forward_to_socket_addrs!('a, (&'a str, u16));
+
+#[cfg(test)]
+mod tests {
+    use super::ToSocketAddrsExt;
+
+    #[test]
+    fn to_socket_addrs_ext_str() {
+        let addresses = ":7878".to_socket_addrs_ext().unwrap().collect::<Vec<_>>();
+
+        assert_eq!(addresses.len(), 2);
+        assert_eq!(addresses[0], "0.0.0.0:7878".parse().unwrap());
+        assert_eq!(addresses[1], "[::0]:7878".parse().unwrap());
+    }
+
+    #[test]
+    fn to_socket_addrs_ext_string() {
+        let address = ":7878".to_owned();
+        let addresses = address.to_socket_addrs_ext().unwrap().collect::<Vec<_>>();
+
+        assert_eq!(addresses.len(), 2);
+        assert_eq!(addresses[0], "0.0.0.0:7878".parse().unwrap());
+        assert_eq!(addresses[1], "[::0]:7878".parse().unwrap());
     }
 }
