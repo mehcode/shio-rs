@@ -4,7 +4,7 @@ use std::thread;
 
 use num_cpus;
 use futures::{Future, Stream};
-use hyper;
+use hyper::{self, StatusCode};
 use hyper::server::Http;
 use tokio_core::net::TcpListener;
 use tokio_core::reactor::{Core, Handle};
@@ -13,17 +13,21 @@ use net2::TcpBuilder;
 #[cfg(unix)]
 use net2::unix::UnixTcpBuilderExt;
 
-use super::{Route, Handler, Context, Router, StatusCode, Response};
+use handler::Handler;
+use context::Context;
+use router::{Router, Route};
+use response::Response;
+use errors::ListenError;
 
 pub struct Salt<H: Handler + 'static> {
-    handler: H,
+    handler: Arc<H>,
     threads: usize,
 }
 
 impl<H: Handler> Salt<H> {
     pub fn new(handler: H) -> Self {
         Salt {
-            handler: handler,
+            handler: Arc::new(handler),
             threads: num_cpus::get(),
         }
     }
@@ -33,20 +37,19 @@ impl<H: Handler> Salt<H> {
         self.threads = threads;
     }
 
-    pub fn run<A: ToSocketAddrs>(self, addr: A) {
+    pub fn run<A: ToSocketAddrs>(&self, addr: A) -> Result<(), ListenError> {
         // FIXME: Bind to _all_ addresses asked for
         // FIXME: Return a Result on failure instead of all these unwraps
 
         let addr0 = addr.to_socket_addrs().unwrap().collect::<Vec<_>>()[0];
-        // let router = Arc::new(self.router.clone());
+        // let handler = self.handler.lock().unwrap().clone();
         let mut children = Vec::new();
-        let handler = Arc::new(self.handler);
 
         for _ in 0..self.threads {
-            let handler = handler.clone();
+            let handler = self.handler.clone();
 
-            children.push(thread::spawn(move || {
-                let mut core = Core::new().unwrap();
+            children.push(thread::spawn(move || -> Result<(), ListenError> {
+                let mut core = Core::new()?;
                 let handle = core.handle();
 
                 let service = Service {
@@ -57,22 +60,23 @@ impl<H: Handler> Salt<H> {
                 let builder = (match addr0 {
                     SocketAddr::V4(_) => TcpBuilder::new_v4(),
                     SocketAddr::V6(_) => TcpBuilder::new_v6(),
-                }).unwrap();
+                })?;
 
                 // Set SO_REUSEADDR on the socket
-                builder.reuse_address(true).unwrap();
+                builder.reuse_address(true)?;
 
                 // Set SO_REUSEPORT on the socket (in unix)
                 #[cfg(unix)]
-                builder.reuse_port(true).unwrap();
+                builder.reuse_port(true)?;
 
-                builder.bind(&addr0).unwrap();
+                builder.bind(&addr0)?;
 
                 let listener = TcpListener::from_listener(
-                    builder.listen(128).unwrap(),
+                    // TODO: Should this be configurable somewhere?
+                    builder.listen(128)?,
                     &addr0,
                     &core.handle(),
-                ).unwrap();
+                )?;
 
                 let protocol = Http::new();
                 let srv = listener.incoming().for_each(|(socket, addr)| {
@@ -81,13 +85,17 @@ impl<H: Handler> Salt<H> {
                     Ok(())
                 });
 
-                core.run(srv).unwrap();
+                core.run(srv)?;
+
+                Ok(())
             }));
         }
 
         for child in children.drain(..) {
-            let _ = child.join();
+            child.join().unwrap()?;
         }
+
+        Ok(())
     }
 }
 
@@ -107,12 +115,16 @@ impl Salt<Router> {
     }
 }
 
+// FIXME: Why does #[derive(Clone)] not work here? This _seems_ like a implementation that
+//        should be auto-derived.
+
+// #[derive(Clone)]
 struct Service<H: Handler + 'static> {
     handler: Arc<H>,
     handle: Handle,
 }
 
-impl<H: Handler + 'static> Service<H> {
+impl<H: Handler + 'static> Clone for Service<H> {
     fn clone(&self) -> Self {
         Service { handler: self.handler.clone(), handle: self.handle.clone() }
     }

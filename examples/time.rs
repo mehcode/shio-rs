@@ -38,5 +38,5 @@ fn main() {
     stack.add(timeit);
 
     // Create and run a Salt service, using our configured stack as _its_ handler
-    Salt::new(stack).run("0.0.0.0:7878");
+    Salt::new(stack).run(":7878").unwrap();
 }

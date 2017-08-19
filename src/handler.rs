@@ -1,8 +1,8 @@
 use futures::Future;
-use hyper;
-use super::{BoxFutureResponse};
+use hyper::{self, StatusCode};
 
-use super::{Context, Response, StatusCode};
+use response::{Response, BoxFutureResponse};
+use context::Context;
 
 pub trait Handler: Send + Sync {
     type Future: Future<Item = hyper::Response>;
