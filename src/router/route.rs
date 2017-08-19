@@ -1,12 +1,14 @@
 use std::borrow::Cow;
+use std::fmt;
 
-use futures::Future;
-use hyper::{self, Method};
+use hyper::Method;
 use regex::Regex;
 
-use super::{Context, Handler, BoxHandler};
+use context::Context;
+use handler::{Handler, BoxHandler};
+use response::BoxFutureResponse;
 
-//#[derive(Clone)]
+/// Route contains a [`Handler`] and information for matching against requests.
 pub struct Route {
     method: Method,
     pattern: Regex,
@@ -14,6 +16,16 @@ pub struct Route {
 }
 
 impl Route {
+    /// Constructs a new `Route` which matches against the provided information.
+    ///
+    /// ```rust
+    /// # use salt::{Response, Method};
+    /// # use salt::router::Route;
+    /// Route::new(Method::Post, "/inbox", |_| {
+    ///     // [...]
+    /// # Response::new()
+    /// });
+    /// ```
     pub fn new<P, H>(method: Method, pattern: P, handler: H) -> Self
     where
         P: AsRef<str>,
@@ -28,12 +40,12 @@ impl Route {
     }
 
     #[inline]
-    pub fn method(&self) -> &Method {
+    pub(crate) fn method(&self) -> &Method {
         &self.method
     }
 
     #[inline]
-    pub fn pattern(&self) -> &str {
+    pub(crate) fn pattern(&self) -> &str {
         self.pattern.as_str()
     }
 }
@@ -49,11 +61,17 @@ where
 }
 
 impl Handler for Route {
-    type Future = Box<Future<Item = hyper::Response, Error = hyper::Error>>;
+    type Future = BoxFutureResponse;
 
     #[inline]
     fn call(&self, ctx: Context) -> Self::Future {
         self.handler.call(ctx)
+    }
+}
+
+impl fmt::Debug for Route {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Route {{ method: {:?}, pattern: {:?}, .. }}", self.method, self.pattern.as_str())
     }
 }
 
@@ -65,7 +83,7 @@ fn normalize_pattern(pattern: &str) -> Cow<str> {
         // A pattern of "" means <anything goes> and can be used as final fallback route
         "".into() }
     else {
-        let pattern = pattern.trim().trim_left_matches("^").trim_right_matches("$").trim_right_matches("/");
+        let pattern = pattern.trim().trim_left_matches('^').trim_right_matches('$').trim_right_matches('/');
 
         match pattern {
             "" => "^/$".into(),
@@ -79,7 +97,7 @@ mod tests {
     use super::normalize_pattern;
 
     #[test]
-    fn normalize_pattern() {
+    fn test_normalize_pattern() {
         assert_eq!(normalize_pattern(""), "");
         assert_eq!(normalize_pattern("/"), "^/$");
         assert_eq!(normalize_pattern("/path/to"), "^/path/to/?$");

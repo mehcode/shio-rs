@@ -1,12 +1,14 @@
+mod route;
+
 use std::collections::HashMap;
 
-use hyper::{self, Method, StatusCode, Response};
-use futures::{future, Future};
+use hyper::{Method, StatusCode};
+use regex::RegexSet;
 
-use route::Route;
 use handler::Handler;
 use context::Context;
-use regex::RegexSet;
+use response::{Response, BoxFutureResponse};
+pub use router::route::Route;
 
 // From: https://github.com/crumblingstatue/try_opt/blob/master/src/lib.rs#L30
 macro_rules! try_opt {
@@ -25,22 +27,46 @@ pub struct Router {
 }
 
 impl Router {
+    /// Construct a new, empty `Router`.
+    ///
+    /// ```rust
+    /// # use salt::Router;
+    /// let router = Router::new();
+    /// ```
+    ///
+    /// Equivalent to `Router::default()`.
     pub fn new() -> Self {
         Default::default()
     }
 
-    pub fn add<R: Into<Route>>(&mut self, route: R) {
+    /// Add a new route to a `Router`, matching both a [`Method`] and a [`Pattern`]. Any value
+    /// that implements `Into<Route>` may be provided to `route`.
+    ///
+    /// For example, to match a `Get` request to `/users`:
+    ///
+    /// ```rust
+    /// # use salt::{Router, Method, Response, Status};
+    /// # let mut router = Router::new();
+    /// router.route((Method::Get, "/users", |_| {
+    ///     // [...]
+    /// # Response::with(Status::NoContent)
+    /// }));
+    /// ```
+    ///
+    /// [`Method`]: https://docs.rs/hyper/0.11/hyper/enum.Method.html
+    /// [`Pattern`]: struct.Pattern.html
+    pub fn route<R: Into<Route>>(&mut self, route: R) {
         let route: Route = route.into();
         let method = route.method().clone();
 
         self.routes
             .entry(method.clone())
-            .or_insert(Vec::new())
+            .or_insert_with(Vec::new)
             .push(route);
 
         let routes = &self.routes[&method];
 
-        // TODO: It probably makes sense to make this router have some sort of compile step..
+        // FIXME: Think of some way to not re-compile method maps so often during server boot
         // NOTE: The .unwrap cannot fail as we are using route patterns that are pre-verified
         self.route_patterns.insert(
             method.clone(),
@@ -50,8 +76,8 @@ impl Router {
 
     pub(crate) fn find(&self, method: &Method, path: &str) -> Option<&Route> {
         // Pull out the patterns and routes for this method
-        let route_patterns = try_opt!(self.route_patterns.get(method));
         let routes = try_opt!(self.routes.get(method));
+        let route_patterns = try_opt!(self.route_patterns.get(method));
 
         // Get the first match and return it
         let matched_index = try_opt!(route_patterns.matches(path).into_iter().next());
@@ -60,7 +86,7 @@ impl Router {
 }
 
 impl Handler for Router {
-    type Future = Box<Future<Item = Response, Error = hyper::Error>>;
+    type Future = BoxFutureResponse;
 
     #[inline]
     fn call(&self, ctx: Context) -> Self::Future {
@@ -68,7 +94,7 @@ impl Handler for Router {
             Some(route) => route,
             None => {
                 // Return 404 if we failed to find a matching route
-                return Box::new(future::ok(Response::new().with_status(StatusCode::NotFound)));
+                return Box::new(Response::with(StatusCode::NotFound));
             }
         };
 
