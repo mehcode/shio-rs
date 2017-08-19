@@ -12,9 +12,10 @@ use super::{Handler, BoxHandler, BoxFutureResponse, Context};
 /// A `Stack` is constructed by wrapping a _root_ `Handler`.
 ///
 /// ```rust, ignore
-/// let stack = Stack::new(|ctx: &Context| -> {
-///   // An empty handler that returns: 204, No Content
-///   Response::new().status(StatusCode::NoContent)
+/// # use salt::{Stack, Response, Status};
+/// let stack = Stack::new(|_| {
+///   // [...]
+/// # Response::new().status(Status::NoContent)
 /// });
 /// ```
 pub struct Stack {
