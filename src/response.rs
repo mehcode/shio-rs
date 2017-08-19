@@ -1,9 +1,7 @@
 use futures::{Async, Future, Poll};
 use hyper;
 
-// TODO: Look into simplifying this. I don't like the .take in the Future impl
-//       and the builder impls are very verbose. Should probably use the type system more and
-//       have the compiler yell if someone tries to set the body twice (for instance)
+use responder::Responder;
 
 /// Represents an HTTP response.
 pub struct Response {
@@ -12,9 +10,11 @@ pub struct Response {
 
 impl Response {
     pub fn new() -> Response {
-        Response {
-            inner: Some(hyper::Response::new()),
-        }
+        Default::default()
+    }
+
+    pub fn with<R: Responder>(responder: R) -> Response {
+        responder.to_response()
     }
 
     /// Set the `StatusCode` for this response.
@@ -45,6 +45,14 @@ impl Response {
         });
 
         self
+    }
+}
+
+impl Default for Response {
+    fn default() -> Self {
+        Response {
+            inner: Some(hyper::Response::new()),
+        }
     }
 }
 
