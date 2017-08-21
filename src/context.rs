@@ -1,11 +1,10 @@
 use std::ops::Deref;
 use std::io::{self, Read, Write};
 
-use hyper::{self, Method, Request, HttpVersion, Uri, Headers, Body};
+use hyper::{self, Method, Request, HttpVersion, Uri, Headers, Body, Chunk};
 use tokio_core::reactor::Handle;
 use tokio_io::AsyncRead;
-use futures::{Poll, Async, Stream};
-use bytes::{BufMut};
+use futures::{Async, Stream};
 
 /// `Context` represents the context of the current HTTP request.
 ///
@@ -21,8 +20,9 @@ pub struct Context {
     uri: Uri,
     version: HttpVersion,
     headers: Headers,
-    body: Body,
     handle: Handle,
+    body: Body,
+    chunk: Option<(Chunk, usize)>,
 }
 
 impl Context {
@@ -35,6 +35,7 @@ impl Context {
             version,
             headers,
             body,
+            chunk: None
         }
     }
 
@@ -91,12 +92,29 @@ impl Deref for Context {
 
 impl Read for Context {
     fn read(&mut self, mut buf: &mut [u8]) -> io::Result<usize> {
+        if let Some((chunk, index)) = self.chunk.take() {
+            let written = buf.write(&chunk[index..])?;
+
+            if index + written < chunk.len() {
+                self.chunk = Some((chunk, index + written));
+            } else {
+                self.chunk = None;
+            }
+
+            return Ok(written);
+        }
+
         match self.body.poll() {
             Ok(Async::Ready(chunk)) => {
                 Ok(match chunk {
-                    Some(mut chunk) => {
-                        buf.write_all(&mut chunk)?;
-                        chunk.len()
+                    Some(chunk) => {
+                        let written = buf.write(&chunk)?;
+
+                        if written < chunk.len() {
+                            self.chunk = Some((chunk, written));
+                        }
+
+                        written
                     }
 
                     None => {
@@ -118,31 +136,4 @@ impl Read for Context {
     }
 }
 
-impl AsyncRead for Context {
-    fn read_buf<B: BufMut>(&mut self, buf: &mut B) -> Poll<usize, io::Error> {
-        match self.body.poll() {
-            Ok(Async::Ready(chunk)) => {
-                Ok(Async::Ready(match chunk {
-                    Some(mut chunk) => {
-                        buf.put_slice(&mut chunk);
-                        chunk.len()
-                    }
-
-                    None => {
-                        0
-                    }
-                }))
-            }
-
-            Ok(Async::NotReady) => Ok(Async::NotReady),
-            Err(error) => {
-                match error {
-                    hyper::Error::Io(error) => Err(error),
-                    _ => {
-                        Err(io::Error::new(io::ErrorKind::Other, Box::new(error)))
-                    }
-                }
-            }
-        }
-    }
-}
+impl AsyncRead for Context { }
