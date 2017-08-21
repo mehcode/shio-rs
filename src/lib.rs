@@ -17,7 +17,6 @@ pub mod router;
 pub use response::{BoxFutureResponse, FutureResponse, Response};
 pub use salt::Salt;
 pub use context::Context;
-pub use router::Router;
 pub use handler::{BoxHandler, Handler};
 pub use hyper::{header, Method, StatusCode as Status};
 pub use responder::Responder;

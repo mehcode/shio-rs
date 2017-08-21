@@ -1,4 +1,4 @@
-use futures::{IntoFuture, Future};
+use futures::{Future, IntoFuture};
 use hyper::StatusCode;
 
 use response::{BoxFutureResponse, Response};

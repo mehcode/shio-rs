@@ -4,7 +4,7 @@ use std::thread;
 use std::io;
 
 use num_cpus;
-use futures::{future, IntoFuture, Future, Stream};
+use futures::{future, Future, IntoFuture, Stream};
 use hyper::{self, StatusCode};
 use hyper::server::Http;
 use tokio_core::net::TcpListener;

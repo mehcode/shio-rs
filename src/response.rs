@@ -1,4 +1,4 @@
-use futures::{IntoFuture, Future};
+use futures::{Future, IntoFuture};
 use futures::future::{self, FutureResult};
 use hyper;
 

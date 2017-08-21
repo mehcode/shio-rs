@@ -1,7 +1,7 @@
-use futures::{IntoFuture};
+use futures::IntoFuture;
 use std::sync::Arc;
 
-use super::{BoxFutureResponse, Response, BoxHandler, Context, Handler};
+use super::{BoxFutureResponse, BoxHandler, Context, Handler, Response};
 
 // TODO: Discuss alternative designs to reduce allocation. We're knee deep in Boxes here.
 //       I could just be missing something obvious that would keep the design and reduce Boxes.

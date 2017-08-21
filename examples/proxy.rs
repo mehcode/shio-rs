@@ -11,9 +11,9 @@ use hyper::Client;
 fn proxy_google(ctx: Context) -> impl FutureResponse {
     // Proxy google and stream the response back to the client
     // This could easily be expanded into a simple http-proxy
-    Client::new(&ctx).get("http://www.google.com".parse().unwrap()).map(|res| {
-        Response::new().with_body(res.body())
-    })
+    Client::new(&ctx)
+        .get("http://www.google.com".parse().unwrap())
+        .map(|res| Response::new().with_body(res.body()))
 }
 
 fn main() {
