@@ -10,7 +10,7 @@
 
  - **Multi-threaded**. By default, requests are handled by multiple threads, each running an event loop.
 
-### WARNING: Salt is at 0.0.x which means the API is highly unstable. Use at your own risk. See [#1](https://github.com/mehcode/salt-rs/issues) to discuss our general direction.
+### WARNING: Salt is at 0.0.x which means the API is highly unstable. Use at your own risk. See [#1](https://github.com/mehcode/salt-rs/issues/1) to discuss our general direction.
 
 ## Usage
 
