@@ -1,6 +1,8 @@
 extern crate hyper;
 extern crate futures;
 extern crate tokio_core;
+extern crate tokio_io;
+extern crate bytes;
 extern crate regex;
 extern crate num_cpus;
 extern crate net2;

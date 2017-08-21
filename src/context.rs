@@ -1,7 +1,11 @@
 use std::ops::Deref;
+use std::io::{self, Read, Write};
 
-use hyper::{Method, Request, Uri};
+use hyper::{self, Method, Request, HttpVersion, Uri, Headers, Body};
 use tokio_core::reactor::Handle;
+use tokio_io::AsyncRead;
+use futures::{Poll, Async, Stream};
+use bytes::{BufMut};
 
 /// `Context` represents the context of the current HTTP request.
 ///
@@ -13,13 +17,25 @@ use tokio_core::reactor::Handle;
 /// [`Handle`]: https://docs.rs/tokio-core/0.1/tokio_core/reactor/struct.Handle.html
 /// [`Request`]: http://doc.rust-lang.org/hyper/0.11/hyper/client/struct.Request.html
 pub struct Context {
-    request: Request,
+    method: Method,
+    uri: Uri,
+    version: HttpVersion,
+    headers: Headers,
+    body: Body,
     handle: Handle,
 }
 
 impl Context {
     pub(crate) fn new(request: Request, handle: Handle) -> Self {
-        Context { request, handle }
+        let (method, uri, version, headers, body) = request.deconstruct();
+
+        Context { handle,
+            method,
+            uri,
+            version,
+            headers,
+            body,
+        }
     }
 
     /// Return a reference to a handle to the event loop this `Context` is associated with.
@@ -28,30 +44,40 @@ impl Context {
         &self.handle
     }
 
-    /// Return a reference to the [`Request`] this `Context` was constructed from.
-    ///
-    /// [`Request`]: http://doc.rust-lang.org/hyper/0.11/hyper/client/struct.Request.html
+    /// Returns a reference to the request HTTP version.
     #[inline]
-    pub fn request(&self) -> &Request {
-        &self.request
+    pub fn version(&self) -> &HttpVersion {
+        &self.version
     }
 
-    /// Returns a reference to the associated HTTP method.
+    /// Returns a reference to the request headers.
+    #[inline]
+    pub fn headers(&self) -> &Headers {
+        &self.headers
+    }
+
+    /// Returns a reference to the request HTTP method.
     #[inline]
     pub fn method(&self) -> &Method {
-        self.request.method()
+        &self.method
     }
 
-    /// Returns a reference to the associated request URI.
+    /// Returns a reference to the request URI.
     #[inline]
     pub fn uri(&self) -> &Uri {
-        self.request.uri()
+        &self.uri
     }
 
-    /// Returns a reference to the associated request path.
+    /// Returns a reference to the request path.
     #[inline]
     pub fn path(&self) -> &str {
-        self.request.path()
+        self.uri.path()
+    }
+
+    /// Returns a reference to the request body.
+    #[inline]
+    pub fn body(&self) -> &Body {
+        &self.body
     }
 }
 
@@ -60,5 +86,63 @@ impl Deref for Context {
 
     fn deref(&self) -> &Self::Target {
         &self.handle
+    }
+}
+
+impl Read for Context {
+    fn read(&mut self, mut buf: &mut [u8]) -> io::Result<usize> {
+        match self.body.poll() {
+            Ok(Async::Ready(chunk)) => {
+                Ok(match chunk {
+                    Some(mut chunk) => {
+                        buf.write_all(&mut chunk)?;
+                        chunk.len()
+                    }
+
+                    None => {
+                        0
+                    }
+                })
+            }
+
+            Ok(Async::NotReady) => Err(io::ErrorKind::WouldBlock.into()),
+            Err(error) => {
+                match error {
+                    hyper::Error::Io(error) => Err(error),
+                    _ => {
+                        Err(io::Error::new(io::ErrorKind::Other, Box::new(error)))
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl AsyncRead for Context {
+    fn read_buf<B: BufMut>(&mut self, buf: &mut B) -> Poll<usize, io::Error> {
+        match self.body.poll() {
+            Ok(Async::Ready(chunk)) => {
+                Ok(Async::Ready(match chunk {
+                    Some(mut chunk) => {
+                        buf.put_slice(&mut chunk);
+                        chunk.len()
+                    }
+
+                    None => {
+                        0
+                    }
+                }))
+            }
+
+            Ok(Async::NotReady) => Ok(Async::NotReady),
+            Err(error) => {
+                match error {
+                    hyper::Error::Io(error) => Err(error),
+                    _ => {
+                        Err(io::Error::new(io::ErrorKind::Other, Box::new(error)))
+                    }
+                }
+            }
+        }
     }
 }
