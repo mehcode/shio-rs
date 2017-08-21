@@ -4,6 +4,8 @@ use hyper;
 
 use responder::Responder;
 
+// TODO: Add a ResponseBuilder type that has simpler methods like .body instead of .with_body
+
 /// Represents an HTTP response.
 pub struct Response {
     inner: hyper::Response<hyper::Body>,
@@ -75,11 +77,3 @@ impl IntoFuture for Response {
 }
 
 pub type BoxFutureResponse = Box<Future<Item = Response, Error = hyper::Error>>;
-
-/// Trait alias for `Future<Item = Response>`.
-///
-/// This looks weird because we can't use normal type aliases in a trait bound. Waiting on
-/// https://github.com/rust-lang/rust/issues/41517.
-pub trait FutureResponse: Future<Item = Response> {}
-
-impl<F: Future<Item = Response, Error = hyper::Error>> FutureResponse for F {}
