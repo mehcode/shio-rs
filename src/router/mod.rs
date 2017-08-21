@@ -1,4 +1,5 @@
 mod route;
+mod pattern;
 
 use std::collections::HashMap;
 
@@ -10,6 +11,7 @@ use handler::Handler;
 use context::Context;
 use response::{BoxFutureResponse, Response};
 pub use router::route::Route;
+pub use router::pattern::Pattern;
 
 // From: https://github.com/crumblingstatue/try_opt/blob/master/src/lib.rs#L30
 macro_rules! try_opt {

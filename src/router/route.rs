@@ -1,17 +1,16 @@
-use std::borrow::Cow;
 use std::fmt;
 
 use hyper::Method;
-use regex::Regex;
 
 use context::Context;
 use handler::{BoxHandler, Handler};
 use response::BoxFutureResponse;
+use router::pattern::Pattern;
 
 /// Route contains a [`Handler`] and information for matching against requests.
 pub struct Route {
     method: Method,
-    pattern: Regex,
+    pattern: Pattern,
     handler: BoxHandler,
 }
 
@@ -28,13 +27,12 @@ impl Route {
     /// ```
     pub fn new<P, H>(method: Method, pattern: P, handler: H) -> Self
     where
-        P: AsRef<str>,
+        P: Into<Pattern>,
         H: Handler + 'static,
     {
         Route {
             handler: handler.boxed(),
-            // TODO: Does this unwrap make sense?
-            pattern: Regex::new(&normalize_pattern(pattern.as_ref())).unwrap(),
+            pattern: pattern.into(),
             method,
         }
     }
@@ -52,7 +50,7 @@ impl Route {
 
 impl<P, H> From<(Method, P, H)> for Route
 where
-    P: AsRef<str>,
+    P: Into<Pattern>,
     H: Handler + 'static,
 {
     fn from(arguments: (Method, P, H)) -> Self {
@@ -77,40 +75,5 @@ impl fmt::Debug for Route {
             self.method,
             self.pattern.as_str()
         )
-    }
-}
-
-// Copied initial impl from
-// https://github.com/ubnt-intrepid/susanoo/blob/master/lib/src/router/route.rs#L111
-// TODO: Rework patterns quite a bit so they can support simplified matches
-//       e.g. "/<id>" or "/<filename: .*>"
-fn normalize_pattern(pattern: &str) -> Cow<str> {
-    if pattern == "" {
-        // A pattern of "" means <anything goes> and can be used as final fallback route
-        "".into()
-    } else {
-        let pattern = pattern
-            .trim()
-            .trim_left_matches('^')
-            .trim_right_matches('$')
-            .trim_right_matches('/');
-
-        match pattern {
-            "" => "^/$".into(),
-            s => format!("^{}/?$", s).into(),
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::normalize_pattern;
-
-    #[test]
-    fn test_normalize_pattern() {
-        assert_eq!(normalize_pattern(""), "");
-        assert_eq!(normalize_pattern("/"), "^/$");
-        assert_eq!(normalize_pattern("/path/to"), "^/path/to/?$");
-        assert_eq!(normalize_pattern("/path/to/"), "^/path/to/?$");
     }
 }
