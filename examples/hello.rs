@@ -15,8 +15,8 @@ fn index(_: Context) -> Response {
     const PHRASE: &str = "Hello World\n";
 
     Response::new()
-        .body(PHRASE)
-        .header(header::ContentLength(PHRASE.len() as u64))
+        .with_body(PHRASE)
+        .with_header(header::ContentLength(PHRASE.len() as u64))
     */
 
     // The default status code is `Status::Ok` (200).
@@ -31,13 +31,14 @@ fn main() {
         .unwrap();
 
     // Salt services have an entry `Handler` that must be defined.
-    // `Salt::default` constructs a `Salt` service with `salt::Router` as its entry `Handler`.
+    // `Salt::default` constructs a `Salt` service with `salt::router::Router`
+    // as its entry `Handler`.
 
     // This would be equivalent:
 
     /*
 
-    let mut router = Salt::Router::new();
+    let mut router = salt::router::Router::new();
 
     router.mount((Method::Get, "/", index));
 
