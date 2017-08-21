@@ -4,7 +4,7 @@ use std::thread;
 use std::io;
 
 use num_cpus;
-use futures::{future, Future, Stream};
+use futures::{future, IntoFuture, Future, Stream};
 use hyper::{self, StatusCode};
 use hyper::server::Http;
 use tokio_core::net::TcpListener;
@@ -16,7 +16,7 @@ use net2::unix::UnixTcpBuilderExt;
 
 use handler::Handler;
 use context::Context;
-use router::{Router, Route};
+use router::{Route, Router};
 use response::Response;
 use errors::ListenError;
 
@@ -75,7 +75,7 @@ impl<H: Handler> Salt<H> {
                     let listener = TcpListener::from_listener(
                         // TODO: Should this be configurable somewhere?
                         builder.listen(128)?,
-                        &addr,
+                        addr,
                         &handle,
                     )?;
 
@@ -113,9 +113,7 @@ impl Default for Salt<Router> {
 
 impl Salt<Router> {
     pub fn route<R: Into<Route>>(&mut self, route: R) -> &mut Self {
-        Arc::get_mut(&mut self.handler).map(|router| {
-            router.route(route)
-        });
+        Arc::get_mut(&mut self.handler).map(|router| router.route(route));
 
         self
     }
@@ -132,7 +130,10 @@ struct Service<H: Handler + 'static> {
 
 impl<H: Handler + 'static> Clone for Service<H> {
     fn clone(&self) -> Self {
-        Service { handler: self.handler.clone(), handle: self.handle.clone() }
+        Service {
+            handler: self.handler.clone(),
+            handle: self.handle.clone(),
+        }
     }
 }
 
@@ -145,12 +146,12 @@ impl<H: Handler + 'static> hyper::server::Service for Service<H> {
     fn call(&self, request: Self::Request) -> Self::Future {
         let ctx = Context::new(request, self.handle.clone());
 
-        Box::new(self.handler.call(ctx).or_else(|_| {
+        Box::new(self.handler.call(ctx).into_future().or_else(|_| {
             // FIXME: Do something with the error argument. Perhaps require at least `:Debug`
             //        so we can let someone know they hit the default error catcher
 
-            Response::new().status(StatusCode::InternalServerError)
-        }))
+            Response::new().with_status(StatusCode::InternalServerError)
+        }).map(Response::into_hyper_response))
     }
 }
 
@@ -170,10 +171,15 @@ impl<'a> ToSocketAddrsExt for &'a str {
             // If we start with `:`; assume the ip is ommitted and this is just a port
             // specification
             let port: u16 = self[1..].parse().unwrap();
-            Ok((&[
-                SocketAddr::new("0.0.0.0".parse().unwrap(), port),
-                SocketAddr::new("::0".parse().unwrap(), port),
-            ][..]).to_socket_addrs()?.collect::<Vec<_>>().into_iter())
+            Ok(
+                (&[
+                    SocketAddr::new("0.0.0.0".parse().unwrap(), port),
+                    SocketAddr::new("::0".parse().unwrap(), port),
+                ][..])
+                    .to_socket_addrs()?
+                    .collect::<Vec<_>>()
+                    .into_iter(),
+            )
         } else {
             self.to_socket_addrs()
         }

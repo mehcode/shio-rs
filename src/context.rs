@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use hyper::{Request, Method, Uri};
+use hyper::{Method, Request, Uri};
 use tokio_core::reactor::Handle;
 
 /// `Context` represents the context of the current HTTP request.

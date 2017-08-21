@@ -5,13 +5,13 @@ use std::io;
 /// An error that occurs during `Salt::listen` or `Salt::run`.
 #[derive(Debug)]
 pub struct ListenError {
-    inner: ListenErrorKind
+    inner: ListenErrorKind,
 }
 
 impl fmt::Display for ListenError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.inner {
-            ListenErrorKind::Io(ref err) => err.fmt(f)
+            ListenErrorKind::Io(ref err) => err.fmt(f),
         }
     }
 }

@@ -25,7 +25,10 @@ fn index(_: Context) -> Response {
 fn main() {
     // Construct a _default_ `Salt` service, mount the `index` handler, and
     // run indefinitely on port `7878` (by default, binds to both `0.0.0.0` and `::0`).
-    Salt::default().route((Method::Get, "/", index)).run(":7878").unwrap();
+    Salt::default()
+        .route((Method::Get, "/", index))
+        .run(":7878")
+        .unwrap();
 
     // Salt services have an entry `Handler` that must be defined.
     // `Salt::default` constructs a `Salt` service with `salt::Router` as its entry `Handler`.

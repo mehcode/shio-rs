@@ -4,10 +4,11 @@ use std::collections::HashMap;
 
 use hyper::{Method, StatusCode};
 use regex::RegexSet;
+use futures::future;
 
 use handler::Handler;
 use context::Context;
-use response::{Response, BoxFutureResponse};
+use response::{BoxFutureResponse, Response};
 pub use router::route::Route;
 
 // From: https://github.com/crumblingstatue/try_opt/blob/master/src/lib.rs#L30
@@ -86,15 +87,15 @@ impl Router {
 }
 
 impl Handler for Router {
-    type Future = BoxFutureResponse;
+    type Result = BoxFutureResponse;
 
     #[inline]
-    fn call(&self, ctx: Context) -> Self::Future {
+    fn call(&self, ctx: Context) -> Self::Result {
         let route = match self.find(ctx.method(), ctx.path()) {
             Some(route) => route,
             None => {
                 // Return 404 if we failed to find a matching route
-                return Box::new(Response::with(StatusCode::NotFound));
+                return Box::new(future::ok(Response::with(StatusCode::NotFound)));
             }
         };
 

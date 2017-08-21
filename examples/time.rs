@@ -4,11 +4,11 @@ extern crate salt;
 
 use std::time;
 
-use salt::{Stack, BoxHandler, Handler};
+use salt::{BoxHandler, Handler, Stack};
 use salt::prelude::*;
 
 fn hello(_: Context) -> Response {
-    Response::new().body("Hello World!\n")
+    Response::with("Hello World!\n")
 }
 
 // Measure request time and print it out

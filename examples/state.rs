@@ -10,15 +10,22 @@ struct HandlerWithState {
 }
 
 impl salt::Handler for HandlerWithState {
-    type Future = Response;
+    type Result = Response;
 
-    fn call(&self, _: Context) -> Self::Future {
+    fn call(&self, _: Context) -> Self::Result {
         let counter = self.counter.fetch_add(1, Ordering::Relaxed);
 
-        Response::new().body(format!("Hi, #{} (from thread: {:?})\n", counter, thread::current().id()))
+        Response::with(format!(
+            "Hi, #{} (from thread: {:?})\n",
+            counter,
+            thread::current().id()
+        ))
     }
 }
 
 fn main() {
-    Salt::default().route((Method::Get, "/", HandlerWithState::default())).run(":7878").unwrap();
+    Salt::default()
+        .route((Method::Get, "/", HandlerWithState::default()))
+        .run(":7878")
+        .unwrap();
 }

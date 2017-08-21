@@ -5,7 +5,7 @@ use hyper::Method;
 use regex::Regex;
 
 use context::Context;
-use handler::{Handler, BoxHandler};
+use handler::{BoxHandler, Handler};
 use response::BoxFutureResponse;
 
 /// Route contains a [`Handler`] and information for matching against requests.
@@ -61,29 +61,39 @@ where
 }
 
 impl Handler for Route {
-    type Future = BoxFutureResponse;
+    type Result = BoxFutureResponse;
 
     #[inline]
-    fn call(&self, ctx: Context) -> Self::Future {
+    fn call(&self, ctx: Context) -> Self::Result {
         self.handler.call(ctx)
     }
 }
 
 impl fmt::Debug for Route {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Route {{ method: {:?}, pattern: {:?}, .. }}", self.method, self.pattern.as_str())
+        write!(
+            f,
+            "Route {{ method: {:?}, pattern: {:?}, .. }}",
+            self.method,
+            self.pattern.as_str()
+        )
     }
 }
 
-// Copied initial impl from https://github.com/ubnt-intrepid/susanoo/blob/master/lib/src/router/route.rs#L111
+// Copied initial impl from
+// https://github.com/ubnt-intrepid/susanoo/blob/master/lib/src/router/route.rs#L111
 // TODO: Rework patterns quite a bit so they can support simplified matches
 //       e.g. "/<id>" or "/<filename: .*>"
 fn normalize_pattern(pattern: &str) -> Cow<str> {
     if pattern == "" {
         // A pattern of "" means <anything goes> and can be used as final fallback route
-        "".into() }
-    else {
-        let pattern = pattern.trim().trim_left_matches('^').trim_right_matches('$').trim_right_matches('/');
+        "".into()
+    } else {
+        let pattern = pattern
+            .trim()
+            .trim_left_matches('^')
+            .trim_right_matches('$')
+            .trim_right_matches('/');
 
         match pattern {
             "" => "^/$".into(),

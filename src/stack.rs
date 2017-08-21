@@ -1,8 +1,7 @@
-use futures::Future;
-use hyper;
+use futures::{IntoFuture};
 use std::sync::Arc;
 
-use super::{Handler, BoxHandler, BoxFutureResponse, Context};
+use super::{BoxFutureResponse, Response, BoxHandler, Context, Handler};
 
 // TODO: Discuss alternative designs to reduce allocation. We're knee deep in Boxes here.
 //       I could just be missing something obvious that would keep the design and reduce Boxes.
@@ -15,7 +14,7 @@ use super::{Handler, BoxHandler, BoxFutureResponse, Context};
 /// # use salt::{Stack, Response, Status};
 /// let stack = Stack::new(|_| {
 ///   // [...]
-/// # Response::new().status(Status::NoContent)
+/// # Response::with(Status::NoContent)
 /// });
 /// ```
 pub struct Stack {
@@ -25,8 +24,9 @@ pub struct Stack {
 
 impl Stack {
     pub fn new<H: Handler + 'static>(root: H) -> Self {
-        Stack { root: Arc::new(root.boxed()),
-            elements: Vec::new()
+        Stack {
+            root: Arc::new(root.boxed()),
+            elements: Vec::new(),
         }
     }
 
@@ -37,10 +37,10 @@ impl Stack {
 }
 
 impl Handler for Stack {
-    type Future = BoxFutureResponse;
+    type Result = BoxFutureResponse;
 
     #[inline]
-    fn call(&self, ctx: Context) -> Self::Future {
+    fn call(&self, ctx: Context) -> Self::Result {
         // Define the initial 'next' fn that simply calls the root handler
         let root = self.root.clone();
         let mut next = Box::new(move |ctx| root.call(ctx)) as BoxHandler;
@@ -63,8 +63,8 @@ pub trait StackHandler: Send + Sync {
 
 impl<TError, TFuture, THandler, TFn> StackHandler for TFn
 where
-    TFuture: Future<Item = hyper::Response, Error = TError>,
-    THandler: Handler<Future = TFuture>,
+    TFuture: IntoFuture<Item = Response, Error = TError>,
+    THandler: Handler<Result = TFuture>,
     THandler: 'static,
     TFn: Send + Sync,
     TFn: Fn(BoxHandler) -> THandler,
@@ -95,7 +95,5 @@ where
 type BoxStackBoxHandler = Box<StackBoxHandler>;
 
 fn boxed<H: StackHandler + 'static>(handler: H) -> BoxStackBoxHandler {
-    Box::new(move |next: BoxHandler| {
-        handler.call(next).boxed()
-    })
+    Box::new(move |next: BoxHandler| handler.call(next).boxed())
 }
