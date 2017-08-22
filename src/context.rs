@@ -1,7 +1,7 @@
 use std::ops::Deref;
 use std::io::{self, Read, Write};
 
-use hyper::{self, Method, Request, HttpVersion, Uri, Headers, Body, Chunk};
+use hyper::{self, Body, Chunk, Headers, HttpVersion, Method, Request, Uri};
 use tokio_core::reactor::Handle;
 use tokio_io::AsyncRead;
 use futures::{Async, Stream};
@@ -22,6 +22,10 @@ pub struct Context {
     headers: Headers,
     handle: Handle,
     body: Body,
+
+    // Used as a buffer when reading the body through `tokio_io::AsyncRead`. This should
+    // hopefully become unneccessary when `hyper::Body` internally
+    // implements `tokio_io::AsyncRead`.
     chunk: Option<(Chunk, usize)>,
 }
 
@@ -29,13 +33,14 @@ impl Context {
     pub(crate) fn new(request: Request, handle: Handle) -> Self {
         let (method, uri, version, headers, body) = request.deconstruct();
 
-        Context { handle,
+        Context {
+            handle,
             method,
             uri,
             version,
             headers,
             body,
-            chunk: None
+            chunk: None,
         }
     }
 
@@ -90,50 +95,45 @@ impl Deref for Context {
     }
 }
 
+impl Context {
+    #[inline]
+    fn read_from_chunk(
+        &mut self,
+        chunk: Chunk,
+        mut buf: &mut [u8],
+        index: usize,
+    ) -> io::Result<usize> {
+        let written = buf.write(&chunk[index..])?;
+
+        self.chunk = if index + written < chunk.len() {
+            Some((chunk, index + written))
+        } else {
+            None
+        };
+
+        Ok(written)
+    }
+}
+
 impl Read for Context {
-    fn read(&mut self, mut buf: &mut [u8]) -> io::Result<usize> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         if let Some((chunk, index)) = self.chunk.take() {
-            let written = buf.write(&chunk[index..])?;
-
-            if index + written < chunk.len() {
-                self.chunk = Some((chunk, index + written));
-            } else {
-                self.chunk = None;
-            }
-
-            return Ok(written);
+            return self.read_from_chunk(chunk, buf, index);
         }
 
         match self.body.poll() {
-            Ok(Async::Ready(chunk)) => {
-                Ok(match chunk {
-                    Some(chunk) => {
-                        let written = buf.write(&chunk)?;
-
-                        if written < chunk.len() {
-                            self.chunk = Some((chunk, written));
-                        }
-
-                        written
-                    }
-
-                    None => {
-                        0
-                    }
-                })
-            }
+            Ok(Async::Ready(chunk)) => Ok(match chunk {
+                Some(chunk) => self.read_from_chunk(chunk, buf, 0)?,
+                None => 0,
+            }),
 
             Ok(Async::NotReady) => Err(io::ErrorKind::WouldBlock.into()),
-            Err(error) => {
-                match error {
-                    hyper::Error::Io(error) => Err(error),
-                    _ => {
-                        Err(io::Error::new(io::ErrorKind::Other, Box::new(error)))
-                    }
-                }
-            }
+            Err(error) => match error {
+                hyper::Error::Io(error) => Err(error),
+                _ => Err(io::Error::new(io::ErrorKind::Other, Box::new(error))),
+            },
         }
     }
 }
 
-impl AsyncRead for Context { }
+impl AsyncRead for Context {}

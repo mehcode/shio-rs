@@ -1,24 +1,22 @@
 use std::sync::Arc;
-use std::net::{SocketAddr, ToSocketAddrs};
 use std::thread;
-use std::io;
+use std::net::SocketAddr;
 
 use num_cpus;
-use futures::{future, Future, IntoFuture, Stream};
-use hyper::{self, StatusCode};
+use futures::{future, Stream};
 use hyper::server::Http;
 use tokio_core::net::TcpListener;
-use tokio_core::reactor::{Core, Handle};
+use tokio_core::reactor::Core;
 use net2::TcpBuilder;
 
 #[cfg(unix)]
 use net2::unix::UnixTcpBuilderExt;
 
 use handler::Handler;
-use context::Context;
 use router::{Route, Router};
-use response::Response;
 use errors::ListenError;
+use util::ToSocketAddrsExt;
+use service::Service;
 
 pub struct Shio<H: Handler + 'static> {
     handler: Arc<H>,
@@ -50,11 +48,7 @@ impl<H: Handler> Shio<H> {
                 let mut core = Core::new()?;
                 let mut work = Vec::new();
                 let handle = core.handle();
-
-                let service = Service {
-                    handler: handler,
-                    handle: handle.clone(),
-                };
+                let service = Service::new(handler, handle.clone());
 
                 for addr in &addrs {
                     let handle = handle.clone();
@@ -116,129 +110,5 @@ impl Shio<Router> {
         Arc::get_mut(&mut self.handler).map(|router| router.route(route));
 
         self
-    }
-}
-
-// FIXME: Why does #[derive(Clone)] not work here? This _seems_ like a implementation that
-//        should be auto-derived.
-
-// #[derive(Clone)]
-struct Service<H: Handler + 'static> {
-    handler: Arc<H>,
-    handle: Handle,
-}
-
-impl<H: Handler + 'static> Clone for Service<H> {
-    fn clone(&self) -> Self {
-        Service {
-            handler: self.handler.clone(),
-            handle: self.handle.clone(),
-        }
-    }
-}
-
-impl<H: Handler + 'static> hyper::server::Service for Service<H> {
-    type Request = hyper::Request;
-    type Response = hyper::Response;
-    type Error = hyper::Error;
-    type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
-
-    fn call(&self, request: Self::Request) -> Self::Future {
-        let ctx = Context::new(request, self.handle.clone());
-
-        Box::new(self.handler.call(ctx).into_future().or_else(|_| {
-            // FIXME: Do something with the error argument. Perhaps require at least `:Debug`
-            //        so we can let someone know they hit the default error catcher
-
-            Response::new().with_status(StatusCode::InternalServerError)
-        }).map(Response::into_hyper_response))
-    }
-}
-
-/// An extension of [`ToSocketAddrs`] that allows for a default address when specifying just
-/// the port as `:8080`.
-pub trait ToSocketAddrsExt {
-    type Iter: Iterator<Item = SocketAddr>;
-
-    fn to_socket_addrs_ext(&self) -> io::Result<Self::Iter>;
-}
-
-impl<'a> ToSocketAddrsExt for &'a str {
-    type Iter = <str as ToSocketAddrs>::Iter;
-
-    fn to_socket_addrs_ext(&self) -> io::Result<Self::Iter> {
-        if self.starts_with(':') {
-            // If we start with `:`; assume the ip is ommitted and this is just a port
-            // specification
-            let port: u16 = self[1..].parse().unwrap();
-            Ok(
-                (&[
-                    SocketAddr::new("0.0.0.0".parse().unwrap(), port),
-                    SocketAddr::new("::0".parse().unwrap(), port),
-                ][..])
-                    .to_socket_addrs()?
-                    .collect::<Vec<_>>()
-                    .into_iter(),
-            )
-        } else {
-            self.to_socket_addrs()
-        }
-    }
-}
-
-impl ToSocketAddrsExt for String {
-    type Iter = <String as ToSocketAddrs>::Iter;
-
-    fn to_socket_addrs_ext(&self) -> io::Result<Self::Iter> {
-        (&**self).to_socket_addrs_ext()
-    }
-}
-
-macro_rules! forward_to_socket_addrs {
-    ($lifetime:tt, $ty:ty) => (
-        impl<$lifetime> ToSocketAddrsExt for $ty {
-            type Iter = <$ty as ToSocketAddrs>::Iter;
-
-            fn to_socket_addrs_ext(&self) -> io::Result<Self::Iter> {
-                self.to_socket_addrs()
-            }
-        }
-    );
-
-    ($ty:ty) => (
-        impl ToSocketAddrsExt for $ty {
-            type Iter = <$ty as ToSocketAddrs>::Iter;
-
-            fn to_socket_addrs_ext(&self) -> io::Result<Self::Iter> {
-                self.to_socket_addrs()
-            }
-        }
-    );
-}
-
-forward_to_socket_addrs!('a, &'a [SocketAddr]);
-forward_to_socket_addrs!('a, (&'a str, u16));
-
-#[cfg(test)]
-mod tests {
-    use super::ToSocketAddrsExt;
-
-    #[test]
-    fn to_socket_addrs_ext_str() {
-        let addresses = ":7878".to_socket_addrs_ext().unwrap().collect::<Vec<_>>();
-
-        assert_eq!(addresses.len(), 2);
-        assert_eq!(addresses[0], "0.0.0.0:7878".parse().unwrap());
-        assert_eq!(addresses[1], "[::0]:7878".parse().unwrap());
-    }
-
-    #[test]
-    fn to_socket_addrs_ext_string() {
-        let address = ":7878".to_owned();
-        let addresses = address.to_socket_addrs_ext().unwrap().collect::<Vec<_>>();
-
-        assert_eq!(addresses.len(), 2);
-        assert_eq!(addresses[0], "0.0.0.0:7878".parse().unwrap());
-        assert_eq!(addresses[1], "[::0]:7878".parse().unwrap());
     }
 }

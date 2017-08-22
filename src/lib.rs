@@ -13,6 +13,8 @@ mod shio;
 mod response;
 mod stack;
 mod responder;
+mod service;
+pub mod util;
 pub mod errors;
 pub mod router;
 

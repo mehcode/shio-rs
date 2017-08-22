@@ -38,16 +38,20 @@ struct RequestBody {
 // for some initial work ion making this more ergonomic
 
 fn index(ctx: Context) -> impl Future<Item = Response, Error = Error> {
-    io::read_to_end(ctx, Vec::new()).from_err().and_then(|(_, buffer)| {
-        future::done(serde_json::from_slice(&buffer)).from_err()
-    }).and_then(|body: RequestBody| {
-        future::done(serde_json::to_string(&json!({
-            "id": 20u8,
-            "name": body.name,
-        }))).from_err()
-    }).map(|s| {
-        Response::with(s).with_header(header::ContentType::json())
-    })
+    io::read_to_end(ctx, Vec::new())
+        .from_err()
+        .and_then(|(_, buffer)| {
+            future::done(serde_json::from_slice(&buffer)).from_err()
+        })
+        .and_then(|body: RequestBody| {
+            future::done(serde_json::to_string(&json!({
+                "id": 20u8,
+                "name": body.name,
+            }))).from_err()
+        })
+        .map(|s| {
+            Response::with(s).with_header(header::ContentType::json())
+        })
 }
 
 fn main() {
