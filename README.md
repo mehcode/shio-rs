@@ -16,7 +16,7 @@
 
 ```toml
 [dependencies]
-salt = "0.3"
+salt = "0.0.3"
 ```
 
 ## Example
