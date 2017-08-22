@@ -7,7 +7,7 @@ repository = "https://github.com/mehcode/salt"
 license = "MIT/Apache-2.0"
 documentation = "https://docs.rs/salt"
 keywords = ["salt", "web", "framework", "async", "server"]
-categories = ["network-programming", "web-programming::http-server"]
+categories = ["asynchronous", "web-programming::http-server"]
 
 [dependencies]
 futures = "0.1.14"
