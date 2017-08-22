@@ -1,10 +1,10 @@
-extern crate salt;
+extern crate shio;
 
-use salt::prelude::*;
+use shio::prelude::*;
 
 // Simple requests should be simple, even in the face of asynchronous design.
 fn index(_: Context) -> Response {
-    // `Response::with( ... )` accepts an instance that implements `salt::Responder`
+    // `Response::with( ... )` accepts an instance that implements `shio::Responder`
     // The implementation for &str will set the body of the response and
     // the Content-Length header.
     Response::with("Hello World!\n")
@@ -23,26 +23,26 @@ fn index(_: Context) -> Response {
 }
 
 fn main() {
-    // Construct a _default_ `Salt` service, mount the `index` handler, and
+    // Construct a _default_ `Shio` service, mount the `index` handler, and
     // run indefinitely on port `7878` (by default, binds to both `0.0.0.0` and `::0`).
-    Salt::default()
+    Shio::default()
         .route((Method::Get, "/", index))
         .run(":7878")
         .unwrap();
 
-    // Salt services have an entry `Handler` that must be defined.
-    // `Salt::default` constructs a `Salt` service with `salt::router::Router`
+    // Shio services have an entry `Handler` that must be defined.
+    // `Shio::default` constructs a `Shio` service with `shio::router::Router`
     // as its entry `Handler`.
 
     // This would be equivalent:
 
     /*
 
-    let mut router = salt::router::Router::new();
+    let mut router = shio::router::Router::new();
 
     router.route((Method::Get, "/", index));
 
-    let mut service = Salt::new(router);
+    let mut service = Shio::new(router);
 
     service.run(":7878").unwrap();
 

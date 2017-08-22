@@ -18,8 +18,8 @@ impl Route {
     /// Constructs a new `Route` which matches against the provided information.
     ///
     /// ```rust
-    /// # use salt::{Response, Method};
-    /// # use salt::router::Route;
+    /// # use shio::{Response, Method};
+    /// # use shio::router::Route;
     /// Route::new(Method::Post, "/inbox", |_| {
     ///     // [...]
     /// # Response::new()

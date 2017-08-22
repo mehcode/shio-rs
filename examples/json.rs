@@ -1,6 +1,6 @@
 #![feature(conservative_impl_trait)]
 
-extern crate salt;
+extern crate shio;
 extern crate futures;
 extern crate tokio_io;
 extern crate serde;
@@ -25,7 +25,7 @@ mod errors {
 
 use tokio_io::io;
 use futures::future;
-use salt::prelude::*;
+use shio::prelude::*;
 use errors::Error;
 
 #[derive(Debug, Deserialize)]
@@ -34,7 +34,7 @@ struct RequestBody {
     name: String,
 }
 
-// See https://github.com/mehcode/salt-rs/blob/tokio-serde-json/examples/json.rs#L22
+// See https://github.com/mehcode/shio-rs/blob/tokio-serde-json/examples/json.rs#L22
 // for some initial work ion making this more ergonomic
 
 fn index(ctx: Context) -> impl Future<Item = Response, Error = Error> {
@@ -51,7 +51,7 @@ fn index(ctx: Context) -> impl Future<Item = Response, Error = Error> {
 }
 
 fn main() {
-    Salt::default()
+    Shio::default()
         .route((Method::Post, "/", index))
         .run(":7878")
         .unwrap();

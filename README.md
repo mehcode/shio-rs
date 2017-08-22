@@ -1,39 +1,39 @@
-# Salt
+# Shio
 ![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)
-[![Crates.io](https://img.shields.io/crates/v/salt.svg)](https://crates.io/crates/salt)
-[![Crates.io](https://img.shields.io/crates/d/salt.svg)](https://crates.io/crates/salt)
-[![Docs.rs](https://docs.rs/salt/badge.svg)](https://docs.rs/salt)
-[![IRC](https://img.shields.io/badge/chat-%23salt-yellow.svg)](https://kiwiirc.com/client/irc.mozilla.org/#salt)
-> Salt is a fast, simple, and asynchronous micro web-framework for Rust.
+[![Crates.io](https://img.shields.io/crates/v/shio.svg)](https://crates.io/crates/shio)
+[![Crates.io](https://img.shields.io/crates/d/shio.svg)](https://crates.io/crates/shio)
+[![Docs.rs](https://docs.rs/shio/badge.svg)](https://docs.rs/shio)
+[![IRC](https://img.shields.io/badge/chat-%23shio-yellow.svg)](https://kiwiirc.com/client/irc.mozilla.org/#shio)
+> Shio is a fast, simple, and asynchronous micro web-framework for Rust.
 
- - **Asynchronous**. Handlers are both handled _asynchronously_ and may be _asynchronous_ themselves. A `salt::Handler` receives a `tokio_core::reactor::Handle` which may be used to schedule additional work on the thread-local event loop.
+ - **Asynchronous**. Handlers are both handled _asynchronously_ and may be _asynchronous_ themselves. A `shio::Handler` receives a `tokio_core::reactor::Handle` which may be used to schedule additional work on the thread-local event loop.
 
  - **Multithreaded**. By default, requests are handled by multiple threads, each running an event loop powered by `tokio`.
 
-### WARNING: Salt is at 0.0.x which means the API is highly unstable. Use at your own risk. See [#1](https://github.com/mehcode/salt-rs/issues/1) to discuss our general direction.
+### WARNING: Shio is at 0.0.x which means the API is highly unstable. Use at your own risk. See [#1](https://github.com/mehcode/shio-rs/issues/1) to discuss our general direction.
 
 ## Usage
 
 ```toml
 [dependencies]
-salt = "0.0.3"
+shio = "0.0.4"
 ```
 
 ## Example
 
 ```rust
-use salt::prelude::*;
+use shio::prelude::*;
 
 fn hello_world(_: Context) -> Response {
   Response::with("Hello World\n")
 }
 
 fn main() {
-  Salt::default().route((Method::Get, "/", hello_world)).run(":7878").unwrap();
+  Shio::default().route((Method::Get, "/", hello_world)).run(":7878").unwrap();
 }
 ```
 
-See the [./examples](https://github.com/mehcode/salt-rs/tree/master/examples) for more usage information.
+See the [./examples](https://github.com/mehcode/shio-rs/tree/master/examples) for more usage information.
 
 ## License
 

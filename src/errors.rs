@@ -2,7 +2,7 @@ use std::fmt;
 use std::error::Error;
 use std::io;
 
-/// An error that occurs during `Salt::listen` or `Salt::run`.
+/// An error that occurs during `Shio::listen` or `Shio::run`.
 #[derive(Debug)]
 pub struct ListenError {
     inner: ListenErrorKind,

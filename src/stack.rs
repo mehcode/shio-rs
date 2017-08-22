@@ -11,7 +11,7 @@ use super::{BoxFutureResponse, BoxHandler, Context, Handler, Response};
 /// A `Stack` is constructed by wrapping a _root_ `Handler`.
 ///
 /// ```rust, ignore
-/// # use salt::{Stack, Response, Status};
+/// # use shio::{Stack, Response, Status};
 /// let stack = Stack::new(|_| {
 ///   // [...]
 /// # Response::with(Status::NoContent)

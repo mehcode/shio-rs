@@ -1,11 +1,11 @@
 #![feature(conservative_impl_trait)]
 
-extern crate salt;
+extern crate shio;
 
 use std::time;
 
-use salt::{BoxHandler, Handler, Stack};
-use salt::prelude::*;
+use shio::{BoxHandler, Handler, Stack};
+use shio::prelude::*;
 
 fn hello(_: Context) -> Response {
     Response::with("Hello World!\n")
@@ -37,6 +37,6 @@ fn main() {
     // Add `timeit` to the sequence of middleware to be executed
     stack.add(timeit);
 
-    // Create and run a Salt service, using our configured stack as _its_ handler
-    Salt::new(stack).run(":7878").unwrap();
+    // Create and run a Shio service, using our configured stack as _its_ handler
+    Shio::new(stack).run(":7878").unwrap();
 }

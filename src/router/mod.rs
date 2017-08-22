@@ -33,7 +33,7 @@ impl Router {
     /// Construct a new, empty `Router`.
     ///
     /// ```rust
-    /// # use salt::Router;
+    /// # use shio::router::Router;
     /// let router = Router::new();
     /// ```
     ///
@@ -48,7 +48,8 @@ impl Router {
     /// For example, to match a `Get` request to `/users`:
     ///
     /// ```rust
-    /// # use salt::{Router, Method, Response, Status};
+    /// # use shio::{Method, Response, Status};
+    /// # use shio::router::Router;
     /// # let mut router = Router::new();
     /// router.route((Method::Get, "/users", |_| {
     ///     // [...]

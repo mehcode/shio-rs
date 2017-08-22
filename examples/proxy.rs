@@ -1,12 +1,12 @@
 #![feature(conservative_impl_trait)]
 
-extern crate salt;
+extern crate shio;
 extern crate hyper;
 
-use salt::prelude::*;
+use shio::prelude::*;
 use hyper::Client;
 
-// Handlers can return a `salt::Response` or an `impl Future<Item = salt::Response>` (
+// Handlers can return a `shio::Response` or an `impl Future<Item = shio::Response>` (
 // which `impl FutureResponse` is an alias for).
 fn proxy_google(ctx: Context) -> impl Future<Item = Response> {
     // Proxy google and stream the response back to the client
@@ -17,7 +17,7 @@ fn proxy_google(ctx: Context) -> impl Future<Item = Response> {
 }
 
 fn main() {
-    Salt::default()
+    Shio::default()
         .route((Method::Get, "/", proxy_google))
         .run(":7878")
         .unwrap();

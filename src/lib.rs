@@ -9,7 +9,7 @@ extern crate net2;
 
 mod context;
 mod handler;
-mod salt;
+mod shio;
 mod response;
 mod stack;
 mod responder;
@@ -17,7 +17,7 @@ pub mod errors;
 pub mod router;
 
 pub use response::{BoxFutureResponse, Response};
-pub use salt::Salt;
+pub use shio::Shio;
 pub use context::Context;
 pub use handler::{BoxHandler, Handler};
 pub use hyper::{header, Method, StatusCode as Status};
@@ -25,7 +25,7 @@ pub use responder::Responder;
 pub use stack::{Stack, StackHandler};
 
 pub mod prelude {
-    pub use super::{header, Context, Method, Response, Salt, Status};
+    pub use super::{header, Context, Method, Response, Shio, Status};
 
     pub use futures::Future;
 }

@@ -1,12 +1,12 @@
 [package]
-name = "salt"
+name = "shio"
 version = "0.0.3"
-description = "Salt is a fast, simple, and asynchronous micro web-framework for Rust."
+description = "Shio is a fast, simple, and asynchronous micro web-framework for Rust."
 authors = ["Ryan Leckey <leckey.ryan@gmail.com>"]
-repository = "https://github.com/mehcode/salt"
+repository = "https://github.com/mehcode/shio"
 license = "MIT/Apache-2.0"
-documentation = "https://docs.rs/salt"
-keywords = ["salt", "web", "framework", "async", "server"]
+documentation = "https://docs.rs/shio"
+keywords = ["shio", "web", "framework", "async", "server"]
 categories = ["asynchronous", "web-programming::http-server"]
 
 [dependencies]

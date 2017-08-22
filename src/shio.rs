@@ -20,14 +20,14 @@ use router::{Route, Router};
 use response::Response;
 use errors::ListenError;
 
-pub struct Salt<H: Handler + 'static> {
+pub struct Shio<H: Handler + 'static> {
     handler: Arc<H>,
     threads: usize,
 }
 
-impl<H: Handler> Salt<H> {
+impl<H: Handler> Shio<H> {
     pub fn new(handler: H) -> Self {
-        Salt {
+        Shio {
             handler: Arc::new(handler),
             threads: num_cpus::get(),
         }
@@ -105,13 +105,13 @@ impl<H: Handler> Salt<H> {
     }
 }
 
-impl Default for Salt<Router> {
+impl Default for Shio<Router> {
     fn default() -> Self {
-        Salt::new(Router::new())
+        Shio::new(Router::new())
     }
 }
 
-impl Salt<Router> {
+impl Shio<Router> {
     pub fn route<R: Into<Route>>(&mut self, route: R) -> &mut Self {
         Arc::get_mut(&mut self.handler).map(|router| router.route(route));
 
