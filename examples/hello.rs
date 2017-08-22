@@ -40,7 +40,7 @@ fn main() {
 
     let mut router = salt::router::Router::new();
 
-    router.mount((Method::Get, "/", index));
+    router.route((Method::Get, "/", index));
 
     let mut service = Salt::new(router);
 
