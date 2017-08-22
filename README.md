@@ -8,7 +8,7 @@
 
  - **Asynchronous**. Handlers are both handled _asynchronously_ and may be _asynchronous_ themselves. A `salt::Handler` receives a `tokio_core::reactor::Handle` which may be used to schedule additional work on the thread-local event loop.
 
- - **Multi-threaded**. By default, requests are handled by multiple threads, each running an event loop.
+ - **Multi-threaded**. By default, requests are handled by multiple threads, each running an event loop powered by `tokio`.
 
 ### WARNING: Salt is at 0.0.x which means the API is highly unstable. Use at your own risk. See [#1](https://github.com/mehcode/salt-rs/issues/1) to discuss our general direction.
 
