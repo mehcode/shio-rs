@@ -34,6 +34,9 @@ struct RequestBody {
     name: String,
 }
 
+// See https://github.com/mehcode/salt-rs/blob/tokio-serde-json/examples/json.rs#L22
+// for some initial work ion making this more ergonomic
+
 fn index(ctx: Context) -> impl Future<Item = Response, Error = Error> {
     io::read_to_end(ctx, Vec::new()).from_err().and_then(|(_, buffer)| {
         future::done(serde_json::from_slice(&buffer)).from_err()
