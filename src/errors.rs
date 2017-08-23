@@ -1,3 +1,5 @@
+//! Types representing errors that can occur from inside Shio.
+
 use std::fmt;
 use std::error::Error;
 use std::io;
