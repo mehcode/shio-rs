@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::thread;
+use std::thread::{self, JoinHandle};
 use std::fmt;
 use std::net::SocketAddr;
 
@@ -43,15 +43,16 @@ where
         self.threads = threads;
     }
 
+    #[cfg_attr(feature = "cargo-clippy", allow(use_debug))]
     pub fn run<A: ToSocketAddrsExt>(&self, addr: A) -> Result<(), ListenError> {
         let addrs = addr.to_socket_addrs_ext()?.collect::<Vec<_>>();
         let mut children = Vec::new();
 
-        for _ in 0..self.threads {
+        let spawn = || -> JoinHandle<Result<(), ListenError>> {
             let addrs = addrs.clone();
             let handler = self.handler.clone();
 
-            children.push(thread::spawn(move || -> Result<(), ListenError> {
+            thread::spawn(move || -> Result<(), ListenError> {
                 let mut core = Core::new()?;
                 let mut work = Vec::new();
                 let handle = core.handle();
@@ -95,11 +96,33 @@ where
                 core.run(future::join_all(work))?;
 
                 Ok(())
-            }));
+            })
+        };
+
+        for _ in 0..self.threads {
+            children.push(spawn());
         }
 
-        for child in children.drain(..) {
-            child.join().unwrap()?;
+        while children.len() > 0 {
+            let respawn = 'outer: loop {
+                for child in children.drain(..) {
+                    match child.join() {
+                        Err(_) => {
+                            // Thread panicked; spawn another one
+                            // TODO: Should there be any sort of limit/backoff here?
+                            break 'outer true;
+                        }
+
+                        _ => { /* Thread shutdown normally */ }
+                    }
+                }
+
+                break false;
+            };
+
+            if respawn {
+                children.push(spawn());
+            }
         }
 
         Ok(())
