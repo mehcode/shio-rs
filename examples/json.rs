@@ -18,27 +18,39 @@ struct RequestBody {
     name: String,
 }
 
-fn json_in_json_out(ctx: Context) -> BoxFutureResponse<Box<Error + Send + Sync>> {
+#[derive(Debug, Serialize)]
+struct ResponseBody {
+    id: u8,
+    name: String,
+}
+
+// First, let's look at composing `tokio_io` with `serde_json` manually.
+
+fn manual_static(ctx: Context) -> BoxFutureResponse<Box<Error + Send + Sync>> {
+    // `tokio_io::io::read_to_end` will asynchronously read the request body, to completion,
+    // and place it in the new vector.
     io::read_to_end(ctx, Vec::new())
+        // `Future::from_err` acts like `?` in that it coerces the error type from
+        // the future into the final error type
         .from_err()
-        .and_then(|(_, buffer)| {
+        // `Future::and_then` can be used to merge an asynchronous workflow with a
+        // synchronous workflow
+        //
+        // `read_to_end` resolves to a tuple of our reader ( `Context` ) and the buffer.
+        .and_then(|(_, buffer)| /* -> Result<Response, Box<Error + Send + Sync>> */ {
             let body: RequestBody = serde_json::from_slice(&buffer)?;
-            let s = serde_json::to_string(&json!({
-                "id": 20u8,
-                "name": body.name,
-            }))?;
+            let s = serde_json::to_string(ResponseBody { id: 20, name: body.name })?;
 
-            let mut response = Response::with(s);
-            response.headers_mut().set(header::ContentType::json());
-
-            Ok(response)
+            Ok(Response::build().header(header::ContentType::json()).body(s))
         })
+        // Put our future inside a Box so we can name our return type
+        // This part will go away once `impl Trait` is stablized in Rust
         .into_box()
 }
 
 fn main() {
     Shio::default()
-        .route((Method::Post, "/", json_in_json_out))
+        .route((Method::Post, "/", manual_static))
         .run(":7878")
         .unwrap();
 }
