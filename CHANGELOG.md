@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.0.5] - 2017-08-23
 ### Added
   - Added `response::Builder`. Construct with `Response::build()`.
 
@@ -74,7 +74,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Asynchronous `Handler` that can be a simple function.
   - Service for `tokio` that is a multithreaded abstraction over `Handler`.
 
-[Unreleased]: ../../compare/v0.0.4...HEAD
+[Unreleased]: ../../compare/v0.0.5...HEAD
+[0.0.5]: ../../compare/v0.0.4...v0.0.5
 [0.0.4]: ../../compare/v0.0.3...v0.0.4
 [0.0.3]: ../../compare/v0.0.2...v0.0.3
 [0.0.2]: ../../compare/v0.0.1...v0.0.2
