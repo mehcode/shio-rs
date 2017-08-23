@@ -3,6 +3,8 @@ use std::io;
 
 /// An extension of [`ToSocketAddrs`] that allows for a default address when specifying just
 /// the port as `:8080`.
+///
+/// [`ToSocketAddrs`]: https://doc.rust-lang.org/std/net/trait.ToSocketAddrs.html
 pub trait ToSocketAddrsExt {
     type Iter: Iterator<Item = SocketAddr>;
 
