@@ -11,21 +11,21 @@ fn hello(_: Context) -> Response {
 
 // Measures request time in μs and prints it out
 fn timeit(next: BoxHandler) -> BoxHandler {
-    Box::new(move |ctx: Context| -> BoxFutureResponse {
+    (move |ctx: Context| {
         let time_before = time::Instant::now();
 
         // TODO: Use `.inspect` over `.map` when
         //  https://github.com/alexcrichton/futures-rs/pull/565 is merged and available in
         //  a released version
 
-        Box::new(next.call(ctx).map(move |response| {
+        next.call(ctx).map(move |response| {
             let d = time::Instant::now().duration_since(time_before);
             let elapsed = (d.as_secs() * 1_000_000) + (d.subsec_nanos() as u64 / 1_000);
             println!("Request took {}μs", elapsed);
 
             response
-        }))
-    })
+        })
+    }).into_box()
 }
 
 fn main() {
