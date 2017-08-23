@@ -1,10 +1,14 @@
+mod builder;
+
+pub use self::builder::Builder;
+
 use futures::{Future, IntoFuture};
 use futures::future::{self, FutureResult};
 use hyper;
 
 use responder::Responder;
-
-// TODO: Add a ResponseBuilder type that has simpler methods like .body instead of .with_body
+use StatusCode;
+use header::Headers;
 
 /// Represents an HTTP response.
 pub struct Response {
@@ -13,6 +17,12 @@ pub struct Response {
 
 impl Response {
     pub fn new() -> Response {
+        Default::default()
+    }
+
+    /// Creates a new builder-style object to manufacture a Response.
+    ///
+    pub fn build() -> Builder {
         Default::default()
     }
 
@@ -26,15 +36,16 @@ impl Response {
 
     /// Get the status.
     #[inline]
-    pub fn status(&self) -> hyper::StatusCode {
+    pub fn status(&self) -> StatusCode {
         self.inner.status()
     }
 
-    /// Set the status and move the `Response`.
+    /// Set the [`StatusCode`] for this response.
+    ///
+    /// [`StatusCode`]: ../enum.StatusCode.html
     #[inline]
-    pub fn with_status(mut self, status_code: hyper::StatusCode) -> Self {
-        self.inner.set_status(status_code);
-        self
+    pub fn set_status(&mut self, status: StatusCode) {
+        self.inner.set_status(status);
     }
 
     /// Take the body.
@@ -42,19 +53,15 @@ impl Response {
         self.inner.body()
     }
 
-    /// Set the body and move the `Response`.
+    /// Set the body for this response.
     #[inline]
-    pub fn with_body<B: Into<hyper::Body>>(mut self, body: B) -> Self {
-        self.inner.set_body(body);
-        self
+    pub fn set_body<B: Into<hyper::Body>>(&mut self, body: B) {
+        self.inner.set_body(body.into());
     }
 
-    /// Set a `Header` and move the `Response`.
+    /// Get a mutable reference to the headers.
     #[inline]
-    pub fn with_header<H: hyper::header::Header>(mut self, header: H) -> Self {
-        self.inner.headers_mut().set(header);
-        self
-    }
+    pub fn headers_mut(&mut self) -> &mut Headers { self.inner.headers_mut() }
 }
 
 impl Default for Response {

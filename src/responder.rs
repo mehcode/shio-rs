@@ -17,23 +17,25 @@ impl<'a> Responder for &'a str {
 impl Responder for String {
     #[inline]
     fn to_response(self) -> Response {
-        Response::new()
-            .with_header(ContentLength(self.len() as u64))
-            .with_body(self)
+        Response::build()
+            .header(ContentLength(self.len() as u64))
+            .body(self)
     }
 }
 
 impl Responder for StatusCode {
     #[inline]
     fn to_response(self) -> Response {
-        Response::new().with_status(self)
+        Response::build().status(self).into()
     }
 }
 
 impl<R: Responder> Responder for (StatusCode, R) {
     #[inline]
     fn to_response(self) -> Response {
-        self.1.to_response().with_status(self.0)
+        let mut response = self.1.to_response();
+        response.set_status(self.0);
+        response
     }
 }
 

@@ -13,7 +13,7 @@ fn proxy_google(ctx: Context) -> impl Future<Item = Response> {
     // This could easily be expanded into a simple http-proxy
     Client::new(&ctx)
         .get("http://www.google.com".parse().unwrap())
-        .map(|res| Response::new().with_body(res.body()))
+        .map(|res| Response::build().body(res.body()))
 }
 
 fn main() {

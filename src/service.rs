@@ -45,7 +45,7 @@ impl<H: Handler + 'static> hyper::server::Service for Service<H> {
             // FIXME: Do something with the error argument. Perhaps require at least `:Debug`
             //        so we can let someone know they hit the default error catcher
 
-            Response::new().with_status(hyper::StatusCode::InternalServerError)
+            Response::with(hyper::StatusCode::InternalServerError)
         }).map(Response::into_hyper_response))
     }
 }

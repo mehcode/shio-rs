@@ -14,9 +14,9 @@ fn index(_: Context) -> Response {
     /*
     const PHRASE: &str = "Hello World\n";
 
-    Response::new()
-        .with_body(PHRASE)
-        .with_header(header::ContentLength(PHRASE.len() as u64))
+    Response::build()
+        .header(header::ContentLength(PHRASE.len() as u64))
+        .body(PHRASE)
     */
 
     // The default status code is `Status::Ok` (200).

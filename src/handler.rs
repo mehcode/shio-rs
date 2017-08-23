@@ -18,7 +18,7 @@ pub trait Handler: Send + Sync {
                 // FIXME: Do something with the error argument. Perhaps require at least `:Debug`
                 //        so we can let someone know they hit the default error catcher
 
-                Response::new().with_status(StatusCode::InternalServerError)
+                Response::with(StatusCode::InternalServerError)
             })) as BoxFutureResponse
         })
     }

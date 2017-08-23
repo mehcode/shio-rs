@@ -50,7 +50,9 @@ fn index(ctx: Context) -> impl Future<Item = Response, Error = Error> {
             }))).from_err()
         })
         .map(|s| {
-            Response::with(s).with_header(header::ContentType::json())
+            let mut response = Response::with(s);
+            response.headers_mut().set(header::ContentType::json());
+            response
         })
 }
 
