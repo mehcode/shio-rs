@@ -34,9 +34,8 @@ pub use responder::Responder;
 pub use middleware::Middleware;
 pub use stack::Stack;
 
+/// Re-exports important traits and types. Meant to be glob imported when using Shio.
 pub mod prelude {
-    //! Re-exports important traits and types. Meant to be glob imported when using Shio.
-
     pub use super::{header, BoxFutureResponse, BoxHandler, Context, Handler, Method, Response,
                     Shio, StatusCode};
 
