@@ -1,7 +1,4 @@
-#![feature(conservative_impl_trait)]
-
 extern crate shio;
-extern crate futures;
 extern crate tokio_io;
 extern crate serde;
 
@@ -9,24 +6,11 @@ extern crate serde;
 extern crate serde_json;
 
 #[macro_use]
-extern crate error_chain;
-
-#[macro_use]
 extern crate serde_derive;
 
-mod errors {
-    error_chain! {
-        foreign_links {
-            Io(::std::io::Error);
-            Json(::serde_json::Error);
-        }
-    }
-}
-
+use std::error::Error;
 use tokio_io::io;
-use futures::future;
 use shio::prelude::*;
-use errors::Error;
 
 #[derive(Debug, Deserialize)]
 struct RequestBody {
@@ -34,31 +18,27 @@ struct RequestBody {
     name: String,
 }
 
-// See https://github.com/mehcode/shio-rs/blob/tokio-serde-json/examples/json.rs#L22
-// for some initial work ion making this more ergonomic
-
-fn index(ctx: Context) -> impl Future<Item = Response, Error = Error> {
+fn json_in_json_out(ctx: Context) -> BoxFutureResponse<Box<Error + Send + Sync>> {
     io::read_to_end(ctx, Vec::new())
         .from_err()
         .and_then(|(_, buffer)| {
-            future::done(serde_json::from_slice(&buffer)).from_err()
-        })
-        .and_then(|body: RequestBody| {
-            future::done(serde_json::to_string(&json!({
+            let body: RequestBody = serde_json::from_slice(&buffer)?;
+            let s = serde_json::to_string(&json!({
                 "id": 20u8,
                 "name": body.name,
-            }))).from_err()
-        })
-        .map(|s| {
+            }))?;
+
             let mut response = Response::with(s);
             response.headers_mut().set(header::ContentType::json());
-            response
+
+            Ok(response)
         })
+        .into_box()
 }
 
 fn main() {
     Shio::default()
-        .route((Method::Post, "/", index))
+        .route((Method::Post, "/", json_in_json_out))
         .run(":7878")
         .unwrap();
 }
