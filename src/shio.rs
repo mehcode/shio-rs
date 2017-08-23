@@ -1,9 +1,10 @@
 use std::sync::Arc;
 use std::thread;
+use std::fmt;
 use std::net::SocketAddr;
 
 use num_cpus;
-use futures::{future, Stream};
+use futures::{future, IntoFuture, Stream};
 use hyper::server::Http;
 use tokio_core::net::TcpListener;
 use tokio_core::reactor::Core;
@@ -18,12 +19,18 @@ use errors::ListenError;
 use util::ToSocketAddrsExt;
 use service::Service;
 
-pub struct Shio<H: Handler + 'static> {
+pub struct Shio<H: Handler + 'static>
+where
+    <H::Result as IntoFuture>::Error: fmt::Debug + Send,
+{
     handler: Arc<H>,
     threads: usize,
 }
 
-impl<H: Handler> Shio<H> {
+impl<H: Handler> Shio<H>
+where
+    <H::Result as IntoFuture>::Error: fmt::Debug + Send,
+{
     pub fn new(handler: H) -> Self {
         Shio {
             handler: Arc::new(handler),

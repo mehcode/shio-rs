@@ -1,4 +1,7 @@
 use std::sync::Arc;
+use std::fmt;
+
+use futures::IntoFuture;
 
 use response::BoxFutureResponse;
 use context::Context;
@@ -11,7 +14,10 @@ pub struct Stack {
 }
 
 impl Stack {
-    pub fn new<H: Handler + 'static>(root: H) -> Self {
+    pub fn new<H: Handler + 'static>(root: H) -> Self
+    where
+        <H::Result as IntoFuture>::Error: fmt::Debug + Send,
+    {
         Stack {
             root: Arc::new(root.boxed()),
             middlewares: Vec::new(),

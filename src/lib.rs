@@ -6,6 +6,8 @@ extern crate bytes;
 extern crate regex;
 extern crate num_cpus;
 extern crate net2;
+#[macro_use]
+extern crate log;
 
 mod context;
 mod handler;
