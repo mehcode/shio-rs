@@ -16,7 +16,7 @@
 
 ```toml
 [dependencies]
-shio = "0.0.4"
+shio = "0.0.5"
 ```
 
 ## Example
