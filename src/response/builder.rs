@@ -13,6 +13,7 @@ use header::Header;
 ///
 /// ```rust
 /// # use shio::response::{self, Response};
+/// # use shio::StatusCode;
 /// // A 204, "No Content", Response
 /// let response: Response = response::Builder::new().status(StatusCode::NoContent).into();
 ///
@@ -38,6 +39,7 @@ impl Builder {
     ///
     /// ```rust
     /// # use shio::response::{self, Response};
+    /// # use shio::StatusCode;
     /// let response: Response = response::Builder::new().status(StatusCode::BadRequest).into();
     /// ```
     #[inline]
@@ -57,7 +59,7 @@ impl Builder {
     ///     // Content-Length: 30
     ///     .header(header::ContentLength(30))
     ///     // Server: Shio/0.0.4
-    ///     .header(header::Server("Shio/0.0.4"))
+    ///     .header(header::Server::new("Shio/0.0.4"))
     ///     .into();
     /// ```
     ///
