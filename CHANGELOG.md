@@ -25,7 +25,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
         Client::new(&ctx)
             .get("http://www.google.com".parse().unwrap())
             .map(|res| Response::build().body(res.body()))
-            // Future turned into Box<Future<Item = Response, Error = hyper::Error>> which BoxFutureResponse<hyper::Error> is an alias of
+            // Future turned into Box<Future<Item = Response, Error = hyper::Error>>
+            // which BoxFutureResponse<hyper::Error> is an alias of
             .into_box()
     }
     ```
