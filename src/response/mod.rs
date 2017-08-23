@@ -61,7 +61,9 @@ impl Response {
 
     /// Get a mutable reference to the headers.
     #[inline]
-    pub fn headers_mut(&mut self) -> &mut Headers { self.inner.headers_mut() }
+    pub fn headers_mut(&mut self) -> &mut Headers {
+        self.inner.headers_mut()
+    }
 }
 
 impl Default for Response {
