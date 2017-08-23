@@ -9,6 +9,7 @@ pub trait Handler: Send + Sync {
 
     fn call(&self, context: Context) -> Self::Result;
 
+    #[inline]
     fn boxed(self) -> BoxHandler
     where
         Self: Sized + 'static,
