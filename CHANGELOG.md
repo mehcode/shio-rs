@@ -18,9 +18,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
   - Recover panicked worker threads and respawn
   - Log handler error when received by the default error catcher
+  - Add `BoxFuture<T, E>` and `FutureExt::into_box` to try and ease box construction to write handlers when not using `impl Trait`. Any `Future` may have `.into_box` applied to it to turn it into a `Box<Future>`.
+
+    ```rust
+    fn proxy_google(ctx: Context) -> BoxFutureResponse<hyper::Error> {
+        Client::new(&ctx)
+            .get("http://www.google.com".parse().unwrap())
+            .map(|res| Response::build().body(res.body()))
+            // Future turned into Box<Future<Item = Response, Error = hyper::Error>> which BoxFutureResponse<hyper::Error> is an alias of
+            .into_box()
+    }
+    ```
 
 ### Changed
-  - Require `Debug + Send` on errors returned from handlers
+  - Require `Debug + Send + Sync` on errors returned from handlers
   - Renamed `StackHandler` to `Middleware`
   - Renamed `Stack::add` to `Stack::with` and optimized usage for builder pattern
 
@@ -28,6 +39,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
     let mut stack = Stack::new(handler).with(middleware).with(other_middleware);
     stack = stack.with(yet_more_middleware);
     ```
+
+  - Renamed `Handler::boxed` to `Handler::into_box` to follow API guidelines
 
 ### Removed
   - Removed `Response::with_*` methods.
