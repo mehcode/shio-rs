@@ -1,6 +1,8 @@
 //! Defines the recover middleware, that permit catch `panic!`
 //! and return an internal error
 
+use std::sync::Arc;
+
 use handler::BoxHandler;
 use context::Context;
 use response::{Response, BoxFutureResponse};
@@ -11,7 +13,9 @@ use hyper::StatusCode;
 
 /// Catch `panic!`, and send back an error 500.
 pub fn recover_panics(next: BoxHandler) -> BoxHandler {
+    let next = Arc::new(next);
     Box::new(move |ctx: Context| -> BoxFutureResponse {
+        let next = next.clone();
         Box::new(
             AssertUnwindSafe(lazy(move || {
                 next.call(ctx)
