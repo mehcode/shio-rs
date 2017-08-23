@@ -6,15 +6,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
- - Added `response::Builder`. Construct with `Response::build()`.
+  - Added `response::Builder`. Construct with `Response::build()`.
 
-   ```rust
-   // This ...
-   Response::new().with_status(StatusCode::Ok).with_body("Hello World\n");
+    ```rust
+    // This ...
+    Response::new().with_status(StatusCode::Ok).with_body("Hello World\n");
 
-   // Becomes ...
-   Response::build().status(StatusCode::Ok).body("Hello World\n");
-   ```
+    // Becomes ...
+    Response::build().status(StatusCode::Ok).body("Hello World\n");
+    ```
+
+  - Recover panicked worker threads and respawn
+  - Log handler error when received by the default error catcher
+
+### Changed
+  - Require `Debug + Send` on errors returned from handlers
+  - Renamed `StackHandler` to `Middleware`
+  - Renamed `Stack::add` to `Stack::with` and optimized usage for builder pattern
+
+    ```rust
+    let mut stack = Stack::new(handler).with(middleware).with(other_middleware);
+    stack = stack.with(yet_more_middleware);
+    ```
 
 ### Removed
   - Removed `Response::with_*` methods.
