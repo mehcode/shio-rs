@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+ - Added `response::Builder`. Construct with `Response::build()`.
+
+   ```rust
+   // This ...
+   Response::new().with_status(StatusCode::Ok).with_body("Hello World\n");
+
+   // Becomes ...
+   Response::build().status(StatusCode::Ok).body("Hello World\n");
+   ```
+
+### Removed
+  - Removed `Response::with_*` methods.
+
 ## [0.0.4] - 2017-08-22
 ### Changed
   - Renamed to `Shio` from [/u/xav_19](https://www.reddit.com/u/xav_19)
@@ -32,6 +47,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Asynchronous `Handler` that can be a simple function.
   - Service for `tokio` that is a multithreaded abstraction over `Handler`.
 
+[Unreleased]: ../../compare/v0.0.4...HEAD
 [0.0.4]: ../../compare/v0.0.3...v0.0.4
 [0.0.3]: ../../compare/v0.0.2...v0.0.3
 [0.0.2]: ../../compare/v0.0.1...v0.0.2
