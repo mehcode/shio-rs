@@ -18,7 +18,7 @@ mod shio;
 mod stack;
 mod responder;
 mod service;
-mod middleware;
+pub mod middleware;
 pub mod response;
 pub mod util;
 pub mod errors;
