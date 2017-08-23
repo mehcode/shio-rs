@@ -13,6 +13,7 @@ mod shio;
 mod stack;
 mod responder;
 mod service;
+mod middleware;
 pub mod response;
 pub mod util;
 pub mod errors;
@@ -25,12 +26,14 @@ pub use shio::Shio;
 pub use context::Context;
 pub use handler::{BoxHandler, Handler};
 pub use responder::Responder;
-pub use stack::{Stack, StackHandler};
+pub use middleware::Middleware;
+pub use stack::Stack;
 
 pub mod prelude {
-    //! Re-exports important traits and types. Meant to be glob imported when using Shio. 
+    //! Re-exports important traits and types. Meant to be glob imported when using Shio.
 
-    pub use super::{header, Context, Method, Response, Shio, StatusCode};
+    pub use super::{header, BoxFutureResponse, BoxHandler, Context, Handler, Method, Response,
+                    Shio, StatusCode};
 
     pub use futures::Future;
 }
