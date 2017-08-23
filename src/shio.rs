@@ -43,7 +43,7 @@ where
         self.threads = threads;
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(use_debug))]
+    #[cfg_attr(feature = "cargo-clippy", allow(use_debug, never_loop))]
     pub fn run<A: ToSocketAddrsExt>(&self, addr: A) -> Result<(), ListenError> {
         let addrs = addr.to_socket_addrs_ext()?.collect::<Vec<_>>();
         let mut children = Vec::new();
@@ -103,17 +103,13 @@ where
             children.push(spawn());
         }
 
-        while children.len() > 0 {
+        while !children.is_empty() {
             let respawn = 'outer: loop {
                 for child in children.drain(..) {
-                    match child.join() {
-                        Err(_) => {
-                            // Thread panicked; spawn another one
-                            // TODO: Should there be any sort of limit/backoff here?
-                            break 'outer true;
-                        }
-
-                        _ => { /* Thread shutdown normally */ }
+                    if child.join().is_err() {
+                        // Thread panicked; spawn another one
+                        // TODO: Should there be any sort of limit/backoff here?
+                        break 'outer true;
                     }
                 }
 

@@ -6,6 +6,7 @@ use response::{BoxFutureResponse, Response};
 use context::Context;
 use StatusCode;
 
+#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value, use_debug))]
 pub(crate) fn default_catch<E: fmt::Debug + Send>(err: E) -> Response {
     // TODO: Support definable error catchers
     /*
@@ -39,6 +40,7 @@ where
     }
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(stutter))]
 pub type BoxHandler = Box<Handler<Result = BoxFutureResponse>>;
 
 impl<TError, TFuture, TFn> Handler for TFn

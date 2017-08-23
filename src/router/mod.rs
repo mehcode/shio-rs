@@ -94,14 +94,11 @@ impl Handler for Router {
 
     #[inline]
     fn call(&self, ctx: Context) -> Self::Result {
-        let route = match self.find(ctx.method(), ctx.path()) {
-            Some(route) => route,
-            None => {
-                // Return 404 if we failed to find a matching route
-                return Box::new(future::ok(Response::with(StatusCode::NotFound)));
-            }
-        };
-
-        route.call(ctx)
+        if let Some(route) = self.find(ctx.method(), ctx.path()) {
+            route.call(ctx)
+        } else {
+            // Return 404 if we failed to find a matching route
+            Box::new(future::ok(Response::with(StatusCode::NotFound)))
+        }
     }
 }

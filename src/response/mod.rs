@@ -85,4 +85,5 @@ impl IntoFuture for Response {
     }
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(stutter))]
 pub type BoxFutureResponse = Box<Future<Item = Response, Error = hyper::Error>>;

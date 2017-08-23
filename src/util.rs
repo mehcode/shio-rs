@@ -14,6 +14,7 @@ pub trait ToSocketAddrsExt {
 impl<'a> ToSocketAddrsExt for &'a str {
     type Iter = <str as ToSocketAddrs>::Iter;
 
+    #[cfg_attr(feature = "cargo-clippy", allow(result_unwrap_used))]
     fn to_socket_addrs_ext(&self) -> io::Result<Self::Iter> {
         if self.starts_with(':') {
             // If we start with `:`; assume the ip is omitted and this is just a port
