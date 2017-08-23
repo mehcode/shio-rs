@@ -3,7 +3,7 @@ mod pattern;
 
 use std::collections::HashMap;
 
-use hyper::{Method, StatusCode};
+use hyper::{self, Method, StatusCode};
 use regex::RegexSet;
 use futures::future;
 
@@ -90,7 +90,7 @@ impl Router {
 }
 
 impl Handler for Router {
-    type Result = BoxFutureResponse;
+    type Result = BoxFutureResponse<hyper::Error>;
 
     #[inline]
     fn call(&self, ctx: Context) -> Self::Result {

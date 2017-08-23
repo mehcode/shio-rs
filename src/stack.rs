@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::fmt;
 
 use futures::IntoFuture;
+use hyper;
 
 use response::BoxFutureResponse;
 use context::Context;
@@ -16,22 +17,22 @@ pub struct Stack {
 impl Stack {
     pub fn new<H: Handler + 'static>(root: H) -> Self
     where
-        <H::Result as IntoFuture>::Error: fmt::Debug + Send,
+        <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
     {
         Stack {
-            root: Arc::new(root.boxed()),
+            root: Arc::new(root.into_box()),
             middlewares: Vec::new(),
         }
     }
 
     pub fn with<T: Middleware + 'static>(mut self, middleware: T) -> Self {
-        self.middlewares.push(middleware.boxed());
+        self.middlewares.push(middleware.into_box());
         self
     }
 }
 
 impl Handler for Stack {
-    type Result = BoxFutureResponse;
+    type Result = BoxFutureResponse<hyper::Error>;
 
     #[inline]
     fn call(&self, ctx: Context) -> Self::Result {

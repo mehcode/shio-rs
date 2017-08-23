@@ -4,7 +4,7 @@ pub trait Middleware: Send + Sync {
     fn call(&self, next: BoxHandler) -> BoxHandler;
 
     #[inline]
-    fn boxed(self) -> BoxMiddleware
+    fn into_box(self) -> BoxMiddleware
     where
         Self: Sized + 'static,
     {

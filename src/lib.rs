@@ -23,6 +23,7 @@ pub mod response;
 pub mod util;
 pub mod errors;
 pub mod router;
+pub mod ext;
 
 pub use hyper::{header, Method, StatusCode};
 
@@ -40,4 +41,5 @@ pub mod prelude {
                     Shio, StatusCode};
 
     pub use futures::Future;
+    pub use ext::{BoxFuture, FutureExt};
 }

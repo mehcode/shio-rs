@@ -15,7 +15,7 @@ use context::Context;
 // #[derive(Clone)]
 pub(crate) struct Service<H: Handler + 'static>
 where
-    <H::Result as IntoFuture>::Error: fmt::Debug + Send,
+    <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
 {
     handler: Arc<H>,
     handle: Handle,
@@ -23,7 +23,7 @@ where
 
 impl<H: Handler + 'static> Service<H>
 where
-    <H::Result as IntoFuture>::Error: fmt::Debug + Send,
+    <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
 {
     pub(crate) fn new(handler: Arc<H>, handle: Handle) -> Self {
         Service { handler, handle }
@@ -32,7 +32,7 @@ where
 
 impl<H: Handler + 'static> Clone for Service<H>
 where
-    <H::Result as IntoFuture>::Error: fmt::Debug + Send,
+    <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
 {
     fn clone(&self) -> Self {
         Service {
@@ -44,7 +44,7 @@ where
 
 impl<H: Handler + 'static> hyper::server::Service for Service<H>
 where
-    <H::Result as IntoFuture>::Error: fmt::Debug + Send,
+    <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
 {
     type Request = hyper::Request;
     type Response = hyper::Response;

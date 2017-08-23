@@ -1,6 +1,6 @@
 use std::fmt;
 
-use hyper::Method;
+use hyper::{self, Method};
 use futures::IntoFuture;
 
 use context::Context;
@@ -30,10 +30,10 @@ impl Route {
     where
         P: Into<Pattern>,
         H: Handler + 'static,
-        <H::Result as IntoFuture>::Error: fmt::Debug + Send,
+        <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
     {
         Route {
-            handler: handler.boxed(),
+            handler: handler.into_box(),
             pattern: pattern.into(),
             method,
         }
@@ -54,7 +54,7 @@ impl<P, H> From<(Method, P, H)> for Route
 where
     P: Into<Pattern>,
     H: Handler + 'static,
-    <H::Result as IntoFuture>::Error: fmt::Debug + Send,
+    <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
 {
     fn from(arguments: (Method, P, H)) -> Self {
         Route::new(arguments.0, arguments.1, arguments.2)
@@ -62,7 +62,7 @@ where
 }
 
 impl Handler for Route {
-    type Result = BoxFutureResponse;
+    type Result = BoxFutureResponse<hyper::Error>;
 
     #[inline]
     fn call(&self, ctx: Context) -> Self::Result {
