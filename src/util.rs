@@ -16,9 +16,12 @@ impl<'a> ToSocketAddrsExt for &'a str {
 
     fn to_socket_addrs_ext(&self) -> io::Result<Self::Iter> {
         if self.starts_with(':') {
-            // If we start with `:`; assume the ip is ommitted and this is just a port
+            // If we start with `:`; assume the ip is omitted and this is just a port
             // specification
-            let port: u16 = self[1..].parse().unwrap();
+            let port: u16 = self[1..]
+                .parse()
+                .map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
+
             Ok(
                 (&[
                     SocketAddr::new("0.0.0.0".parse().unwrap(), port),
