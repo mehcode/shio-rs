@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use futures::Future;
 
 /// A type alias for Box<Item = T, Error = E>
