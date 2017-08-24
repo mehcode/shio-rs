@@ -18,6 +18,8 @@ use router::{Route, Router};
 use errors::ListenError;
 use ext::ToSocketAddrsExt;
 use service::Service;
+use stack::Stack;
+use middleware;
 
 pub struct Shio<H: Handler + 'static>
 where
@@ -125,15 +127,31 @@ where
     }
 }
 
-impl Default for Shio<Router> {
+impl Default for Shio<Stack<Router>> {
     fn default() -> Self {
-        Shio::new(Router::new())
+        Shio::new(Stack::default())
     }
 }
 
 impl Shio<Router> {
     pub fn route<R: Into<Route>>(&mut self, route: R) -> &mut Self {
         Arc::get_mut(&mut self.handler).map(|router| router.route(route));
+
+        self
+    }
+}
+
+impl Shio<Stack<Router>> {
+    pub fn with<T: middleware::Middleware + 'static>(mut self, middleware: T) -> Self {
+        Arc::get_mut(&mut self.handler).map(|stack| { stack.add(middleware); });
+
+        self
+    }
+
+    pub fn route<R: Into<Route>>(&mut self, route: R) -> &mut Self {
+        Arc::get_mut(&mut self.handler).map(|stack| {
+            Arc::get_mut(&mut stack.handler).map(|router| router.route(route))
+        });
 
         self
     }
