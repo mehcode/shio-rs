@@ -12,7 +12,7 @@ use futures::{lazy, future, Future};
 use hyper::StatusCode;
 
 /// Catch `panic!`, and send back an error 500.
-pub fn recover_panics(next: BoxHandler) -> BoxHandler {
+pub(super) fn recover_panics(next: BoxHandler) -> BoxHandler {
     let next = Arc::new(next);
     Box::new(move |ctx: Context| -> BoxFutureResponse {
         let next = next.clone();
@@ -25,13 +25,10 @@ pub fn recover_panics(next: BoxHandler) -> BoxHandler {
                 Box::new(match result {
                     Err(_err) => {
                         // a panic occurs, send back an InternalServerError response
-                        future::ok(Response::build().status(StatusCode::InternalServerError).into())
+                        future::ok(Response::with(StatusCode::InternalServerError))
                     },
-                    Ok(Err(e)) => {
-                        future::err(e) 
-                    },
-                    Ok(Ok(x))  => { 
-                        future::ok(x) 
+                    Ok(result) => {
+                        future::result(result)
                     },
                 })
             })

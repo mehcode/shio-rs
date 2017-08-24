@@ -27,4 +27,13 @@ where
 pub type BoxMiddleware = Box<Middleware>;
 
 
-pub mod recover;
+mod recover;
+
+/// Middleware that catches `panic!`, returning an error 500 to the user.
+pub struct Recover;
+
+impl Middleware for Recover {
+    fn call(&self, next: BoxHandler) -> BoxHandler {
+        recover::recover_panics(next)
+    }
+}
