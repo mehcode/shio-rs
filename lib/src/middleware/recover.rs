@@ -8,7 +8,7 @@ use context::Context;
 use response::BoxFutureResponse;
 
 use std::panic::AssertUnwindSafe;
-use futures::{lazy, future, Future};
+use futures::{future, lazy, Future};
 use handler::default_catch;
 use super::Middleware;
 
@@ -21,18 +21,15 @@ impl Middleware for Recover {
         Box::new(move |ctx: Context| -> BoxFutureResponse {
             let next = next.clone();
             Box::new(
-                AssertUnwindSafe(lazy(move || {
-                    next.call(ctx)
-                }))
-                .catch_unwind()
-                .then(move |result| -> BoxFutureResponse {
-                    Box::new(match result {
-                        Err(err) => future::ok(default_catch(err)),
-                        Ok(result) => future::result(result),
-                    })
-                })
+                AssertUnwindSafe(lazy(move || next.call(ctx)))
+                    .catch_unwind()
+                    .then(move |result| -> BoxFutureResponse {
+                        Box::new(match result {
+                            Err(err) => future::ok(default_catch(err)),
+                            Ok(result) => future::result(result),
+                        })
+                    }),
             )
         })
     }
 }
-
