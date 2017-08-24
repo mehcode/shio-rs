@@ -10,6 +10,7 @@ use response::{Response, BoxFutureResponse};
 use std::panic::AssertUnwindSafe;
 use futures::{lazy, future, Future};
 use hyper::StatusCode;
+use handler::default_catch;
 
 /// Catch `panic!`, and send back an error 500.
 pub(super) fn recover_panics(next: BoxHandler) -> BoxHandler {
@@ -23,13 +24,8 @@ pub(super) fn recover_panics(next: BoxHandler) -> BoxHandler {
             .catch_unwind()
             .then(move |result| -> BoxFutureResponse {
                 Box::new(match result {
-                    Err(_err) => {
-                        // a panic occurs, send back an InternalServerError response
-                        future::ok(Response::with(StatusCode::InternalServerError))
-                    },
-                    Ok(result) => {
-                        future::result(result)
-                    },
+                    Err(err) => future::ok(default_catch(err)),
+                    Ok(result) => future::result(result),
                 })
             })
         )
