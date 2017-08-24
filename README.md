@@ -22,6 +22,8 @@ shio = "0.0.5"
 ## Example
 
 ```rust
+extern crate shio;
+
 use shio::prelude::*;
 
 fn hello_world(_: Context) -> Response {
