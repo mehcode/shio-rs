@@ -25,3 +25,6 @@ where
 
 #[cfg_attr(feature = "cargo-clippy", allow(stutter))]
 pub type BoxMiddleware = Box<Middleware>;
+
+mod recover;
+pub use self::recover::Recover;
