@@ -9,4 +9,5 @@ members = [
   "examples/proxy",
   "examples/state",
   "examples/time",
+  "examples/redirect",
 ]
