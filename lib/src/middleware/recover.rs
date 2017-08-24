@@ -5,29 +5,34 @@ use std::sync::Arc;
 
 use handler::BoxHandler;
 use context::Context;
-use response::{Response, BoxFutureResponse};
+use response::BoxFutureResponse;
 
 use std::panic::AssertUnwindSafe;
 use futures::{lazy, future, Future};
-use hyper::StatusCode;
 use handler::default_catch;
+use super::Middleware;
 
-/// Catch `panic!`, and send back an error 500.
-pub(super) fn recover_panics(next: BoxHandler) -> BoxHandler {
-    let next = Arc::new(next);
-    Box::new(move |ctx: Context| -> BoxFutureResponse {
-        let next = next.clone();
-        Box::new(
-            AssertUnwindSafe(lazy(move || {
-                next.call(ctx)
-            }))
-            .catch_unwind()
-            .then(move |result| -> BoxFutureResponse {
-                Box::new(match result {
-                    Err(err) => future::ok(default_catch(err)),
-                    Ok(result) => future::result(result),
+/// Middleware that catches `panic!`, returning an error 500 to the user.
+pub struct Recover;
+
+impl Middleware for Recover {
+    fn call(&self, next: BoxHandler) -> BoxHandler {
+        let next = Arc::new(next);
+        Box::new(move |ctx: Context| -> BoxFutureResponse {
+            let next = next.clone();
+            Box::new(
+                AssertUnwindSafe(lazy(move || {
+                    next.call(ctx)
+                }))
+                .catch_unwind()
+                .then(move |result| -> BoxFutureResponse {
+                    Box::new(match result {
+                        Err(err) => future::ok(default_catch(err)),
+                        Ok(result) => future::result(result),
+                    })
                 })
-            })
-        )
-    })
+            )
+        })
+    }
 }
+
