@@ -22,9 +22,7 @@ struct ResponseBody {
     name: String,
 }
 
-// First, let's look at composing `tokio_io` with `serde_json` manually.
-
-fn manual_static(ctx: Context) -> BoxFutureResponse<Box<Error + Send + Sync>> {
+fn index(ctx: Context) -> BoxFutureResponse<Box<Error + Send + Sync>> {
     // `tokio_io::io::read_to_end` will asynchronously read the request body, to completion,
     // and place it in the new vector.
     io::read_to_end(ctx, Vec::new())
@@ -48,7 +46,7 @@ fn manual_static(ctx: Context) -> BoxFutureResponse<Box<Error + Send + Sync>> {
 
 fn main() {
     Shio::default()
-        .route((Method::Post, "/", manual_static))
+        .route((Method::Post, "/", index))
         .run(":7878")
         .unwrap();
 }
