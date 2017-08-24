@@ -16,7 +16,7 @@ use net2::unix::UnixTcpBuilderExt;
 use handler::Handler;
 use router::{Route, Router};
 use errors::ListenError;
-use util::ToSocketAddrsExt;
+use ext::ToSocketAddrsExt;
 use service::Service;
 
 pub struct Shio<H: Handler + 'static>

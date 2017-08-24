@@ -18,12 +18,11 @@ mod shio;
 mod stack;
 mod responder;
 mod service;
+pub mod ext;
 pub mod middleware;
 pub mod response;
-pub mod util;
 pub mod errors;
 pub mod router;
-pub mod ext;
 
 pub use hyper::{header, Method, StatusCode};
 
