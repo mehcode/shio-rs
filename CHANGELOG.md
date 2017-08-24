@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
     ```
 
 ### Changed
+  - Move `shio::Responder` to `shio::response::Responder`
   - Require `Debug + Send + Sync` on errors returned from handlers
   - Renamed `StackHandler` to `Middleware`
   - Renamed `Stack::add` to `Stack::with` and optimized usage for builder pattern

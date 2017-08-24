@@ -1,12 +1,13 @@
 mod builder;
+mod responder;
 
 pub use self::builder::Builder;
+pub use self::responder::Responder;
 
 use futures::{Future, IntoFuture};
 use futures::future::{self, FutureResult};
 use hyper;
 
-use responder::Responder;
 use StatusCode;
 use header::Headers;
 

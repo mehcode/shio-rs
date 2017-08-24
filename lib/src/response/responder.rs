@@ -1,7 +1,6 @@
-use hyper::header::ContentLength;
-use hyper::StatusCode;
-
 use response::Response;
+use StatusCode;
+use header::ContentLength;
 
 pub trait Responder {
     fn to_response(self) -> Response;

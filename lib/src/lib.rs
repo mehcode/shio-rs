@@ -16,7 +16,6 @@ mod context;
 mod handler;
 mod shio;
 mod stack;
-mod responder;
 mod service;
 pub mod ext;
 pub mod middleware;
@@ -30,7 +29,6 @@ pub use response::{BoxFutureResponse, Response};
 pub use shio::Shio;
 pub use context::Context;
 pub use handler::{BoxHandler, Handler};
-pub use responder::Responder;
 pub use middleware::Middleware;
 pub use stack::Stack;
 
