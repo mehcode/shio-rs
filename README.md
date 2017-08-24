@@ -33,7 +33,13 @@ fn main() {
 }
 ```
 
-See the [./examples](https://github.com/mehcode/shio-rs/tree/master/examples) for more usage information.
+See the [examples](https://github.com/mehcode/shio-rs/tree/master/examples) for more usage information.
+
+To run a specific example, use:
+
+```bash
+$ cargo run -p <example name>
+```
 
 ## License
 

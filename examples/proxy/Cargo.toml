@@ -1,0 +1,8 @@
+[package]
+name = "proxy"
+version = "0.0.0"
+workspace = "../.."
+
+[dependencies]
+shio = { path = "../../lib" }
+hyper = "0.11"

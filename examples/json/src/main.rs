@@ -1,8 +1,6 @@
 extern crate shio;
 extern crate tokio_io;
 extern crate serde;
-
-#[macro_use]
 extern crate serde_json;
 
 #[macro_use]
@@ -39,7 +37,7 @@ fn manual_static(ctx: Context) -> BoxFutureResponse<Box<Error + Send + Sync>> {
         // `read_to_end` resolves to a tuple of our reader ( `Context` ) and the buffer.
         .and_then(|(_, buffer)| /* -> Result<Response, Box<Error + Send + Sync>> */ {
             let body: RequestBody = serde_json::from_slice(&buffer)?;
-            let s = serde_json::to_string(ResponseBody { id: 20, name: body.name })?;
+            let s = serde_json::to_string(&ResponseBody { id: 20, name: body.name })?;
 
             Ok(Response::build().header(header::ContentType::json()).body(s))
         })
