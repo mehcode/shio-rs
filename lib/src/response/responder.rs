@@ -1,21 +1,36 @@
+use std::fmt;
+
+use hyper;
+use futures::{future, Future, IntoFuture};
+
 use response::Response;
 use StatusCode;
 use header::ContentLength;
+use ext::{BoxFuture, FutureExt};
 
 pub trait Responder {
-    fn to_response(self) -> Response;
+    type Error: fmt::Debug + Send + Sync;
+    type Result: IntoFuture<Item = Response, Error = Self::Error>;
+
+    fn to_response(self) -> Self::Result;
 }
 
 impl<'a> Responder for &'a str {
+    type Error = hyper::Error;
+    type Result = Response;
+
     #[inline]
-    fn to_response(self) -> Response {
+    fn to_response(self) -> Self::Result {
         self.to_owned().to_response()
     }
 }
 
 impl Responder for String {
+    type Error = hyper::Error;
+    type Result = Response;
+
     #[inline]
-    fn to_response(self) -> Response {
+    fn to_response(self) -> Self::Result {
         Response::build()
             .header(ContentLength(self.len() as u64))
             .body(self)
@@ -23,18 +38,52 @@ impl Responder for String {
 }
 
 impl Responder for StatusCode {
+    type Error = hyper::Error;
+    type Result = Response;
+
     #[inline]
-    fn to_response(self) -> Response {
+    fn to_response(self) -> Self::Result {
         Response::build().status(self).into()
     }
 }
 
-impl<R: Responder> Responder for (StatusCode, R) {
+impl<E: fmt::Debug + Send + Sync, R: Responder<Error = E>> Responder for (StatusCode, R)
+where
+    E: 'static,
+    <<R as Responder>::Result as IntoFuture>::Future: 'static,
+{
+    type Error = E;
+    type Result = BoxFuture<<R::Result as IntoFuture>::Item, Self::Error>;
+
     #[inline]
-    fn to_response(self) -> Response {
-        let mut response = self.1.to_response();
-        response.set_status(self.0);
-        response
+    fn to_response(self) -> Self::Result {
+        let (status, responder) = self;
+
+        responder
+            .to_response()
+            .into_future()
+            .map(move |mut response| {
+                response.set_status(status);
+                response
+            })
+            .into_box()
+    }
+}
+
+impl<E: fmt::Debug + Send + Sync, R: Responder<Error = E>> Responder for Result<R, E>
+where
+    E: 'static,
+    <<R as Responder>::Result as IntoFuture>::Future: 'static,
+{
+    type Error = E;
+    type Result = BoxFuture<<R::Result as IntoFuture>::Item, Self::Error>;
+
+    #[inline]
+    fn to_response(self) -> Self::Result {
+        match self {
+            Ok(responder) => responder.to_response().into_future().into_box(),
+            Err(error) => future::err(error).into_box(),
+        }
     }
 }
 

@@ -27,7 +27,7 @@ impl Response {
         Default::default()
     }
 
-    pub fn with<R: Responder>(responder: R) -> Response {
+    pub fn with<R: Responder>(responder: R) -> R::Result {
         responder.to_response()
     }
 
