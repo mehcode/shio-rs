@@ -26,8 +26,8 @@ extern crate shio;
 
 use shio::prelude::*;
 
-fn hello_world(_: Context) -> Response {
-  Response::with("Hello World\n")
+fn hello_world(_: Context) -> &'static str {
+  "Hello World\n"
 }
 
 fn main() {

@@ -3,13 +3,12 @@ extern crate shio;
 use shio::prelude::*;
 
 // Simple requests should be simple, even in the face of asynchronous design.
-fn index(_: Context) -> Response {
-    // `Response::with( ... )` accepts an instance that implements `shio::Responder`
-    // The implementation for &str will set the body of the response and
-    // the Content-Length header.
-    Response::with("Hello World!\n")
+fn index(_: Context) -> &'static str {
+    // Handlers may return a value that implements `Responder`
+    // &str implements `Responder` and sets both the body and the `Content-Length` header
+    "Hello World!\n"
 
-    // This would be equivalent:
+    // This would be equivalent to returning `Response` and:
 
     /*
     const PHRASE: &str = "Hello World\n";
