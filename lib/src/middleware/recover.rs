@@ -1,20 +1,30 @@
-//! Defines the recover middleware, that permit catch `panic!`
-//! and return an internal error
-
 use std::sync::Arc;
+use std::panic::AssertUnwindSafe;
 
 use hyper;
-use handler::BoxHandler;
-use context::Context;
-
-use std::panic::AssertUnwindSafe;
 use futures::{future, lazy, Future};
-use handler::default_catch;
-use ext::BoxFuture;
-use response::Response;
-use super::Middleware;
 
-/// Middleware that catches `panic!`, returning an error 500 to the user.
+use ext::BoxFuture;
+use handler::{default_catch, BoxHandler};
+use response::Response;
+use context::Context;
+use middleware::Middleware;
+
+/// Middleware that recovers from `panic!` anywhere in the stack, returning
+/// an Internal Server Error (500) to the client.
+///
+/// This middleware is included in the default `Stack` as the first middleware.
+/// When including this in a custom `Stack`, be sure to include this first as well or
+/// `panic!`s in previous middleware will not be caught.
+///
+/// ```rust
+/// # use shio::{Stack, middleware};
+/// // Custom Stack with Recover middleware
+/// Stack::new().with(middleware::Recover);
+///
+/// // Default Stack with Recover middleware
+/// Stack::default();
+/// ```
 pub struct Recover;
 
 impl Middleware for Recover {
