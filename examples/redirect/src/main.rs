@@ -10,12 +10,12 @@ fn redirect_to(_: Context) -> Response {
         .into()
 }
 
-fn redirected(_: Context) -> Response {
-    Response::with("You has been redirected!\n")
+fn redirected(_: Context) -> &'static str {
+    "You has been redirected!\n"
 }
 
-fn index(_: Context) -> Response {
-    Response::with("Hello World!\n")
+fn index(_: Context) -> &'static str {
+    "Hello World!\n"
 }
 
 fn main() {

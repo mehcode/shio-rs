@@ -22,7 +22,7 @@ struct ResponseBody {
     name: String,
 }
 
-fn index(ctx: Context) -> BoxFutureResponse<Box<Error + Send + Sync>> {
+fn index(ctx: Context) -> BoxFuture<Response, Box<Error + Send + Sync>> {
     // `tokio_io::io::read_to_end` will asynchronously read the request body, to completion,
     // and place it in the new vector.
     io::read_to_end(ctx, Vec::new())

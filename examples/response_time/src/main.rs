@@ -14,10 +14,6 @@ fn timeit(next: BoxHandler) -> BoxHandler {
     (move |ctx: Context| {
         let time_before = Instant::now();
 
-        // TODO: Use `.inspect` over `.map` when
-        //  https://github.com/alexcrichton/futures-rs/pull/565 is merged and available in
-        //  a released version
-
         next.call(ctx).inspect(move |_| {
             let d = Instant::now().duration_since(time_before);
             let elapsed = (d.as_secs() * 1_000_000) + (d.subsec_nanos() as u64 / 1_000);
