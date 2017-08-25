@@ -112,7 +112,7 @@ impl Handler for Router {
 
 #[cfg(test)]
 mod tests {
-    use super::{Router, Route};
+    use super::Router;
     use Method::*;
     use Context;
 
