@@ -16,6 +16,16 @@ pub trait Responder {
     fn to_response(self) -> Self::Result;
 }
 
+impl Responder for () {
+    type Error = hyper::Error;
+    type Result = Response;
+
+    #[inline]
+    fn to_response(self) -> Self::Result {
+        Response::build().status(StatusCode::NoContent).into()
+    }
+}
+
 impl<'a> Responder for &'a str {
     type Error = hyper::Error;
     type Result = Response;
