@@ -7,8 +7,8 @@
 //  - Use `Shio::new( .. )` as the router is just getting in the way here
 //  - Proxy full request path
 
-extern crate shio;
 extern crate hyper;
+extern crate shio;
 
 use shio::prelude::*;
 use hyper::Client;

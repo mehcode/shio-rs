@@ -1,5 +1,5 @@
-extern crate shio;
 extern crate hyper;
+extern crate shio;
 
 #[macro_use]
 extern crate askama;
@@ -31,5 +31,8 @@ fn hello<'a>(_: Context) -> HelloTemplate<'a> {
 }
 
 fn main() {
-    Shio::default().route((Method::Get, "/hello", hello)).run(":7878").unwrap()
+    Shio::default()
+        .route((Method::Get, "/hello", hello))
+        .run(":7878")
+        .unwrap()
 }

@@ -1,7 +1,7 @@
-extern crate shio;
-extern crate tokio_io;
 extern crate serde;
 extern crate serde_json;
+extern crate shio;
+extern crate tokio_io;
 
 #[macro_use]
 extern crate serde_derive;
