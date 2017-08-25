@@ -61,7 +61,7 @@ impl Router {
     ///
     /// [`Method`]: https://docs.rs/hyper/0.11/hyper/enum.Method.html
     /// [`Pattern`]: struct.Pattern.html
-    pub fn route<R: Into<Route>>(&mut self, route: R) {
+    pub fn add<R: Into<Route>>(&mut self, route: R) {
         let route: Route = route.into();
         let method = route.method().clone();
 
@@ -80,13 +80,18 @@ impl Router {
         );
     }
 
-    pub(crate) fn find(&self, method: &Method, path: &str) -> Option<&Route> {
+    #[deprecated(since = "0.0.7", note = "use `Router::add` instead")]
+    pub fn route<R: Into<Route>>(&mut self, route: R) {
+        self.add(route);
+    }
+
+    pub(crate) fn find(&self, method: &Method, uri: &str) -> Option<&Route> {
         // Pull out the patterns and routes for this method
         let routes = try_opt!(self.routes.get(method));
         let route_patterns = try_opt!(self.route_patterns.get(method));
 
         // Get the first match and return it
-        let matched_index = try_opt!(route_patterns.matches(path).into_iter().next());
+        let matched_index = try_opt!(route_patterns.matches(uri).into_iter().next());
         Some(&routes[matched_index])
     }
 }

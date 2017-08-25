@@ -136,7 +136,7 @@ impl Default for Shio<Stack<Router>> {
 
 impl Shio<Router> {
     pub fn route<R: Into<Route>>(&mut self, route: R) -> &mut Self {
-        Arc::get_mut(&mut self.handler).map(|router| router.route(route));
+        Arc::get_mut(&mut self.handler).map(|router| router.add(route));
 
         self
     }
@@ -151,7 +151,7 @@ impl Shio<Stack<Router>> {
 
     pub fn route<R: Into<Route>>(&mut self, route: R) -> &mut Self {
         Arc::get_mut(&mut self.handler).map(|stack| {
-            Arc::get_mut(&mut stack.handler).map(|router| router.route(route))
+            Arc::get_mut(&mut stack.handler).map(|router| router.add(route))
         });
 
         self
