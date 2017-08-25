@@ -11,4 +11,5 @@ members = [
   "examples/response_time",
   "examples/responder",
   "examples/redirect",
+  "examples/templates_askama",
 ]

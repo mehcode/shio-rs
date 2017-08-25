@@ -1,0 +1,12 @@
+[package]
+name = "templates_askama"
+version = "0.0.0"
+workspace = "../.."
+
+[dependencies]
+shio = { path = "../../lib" }
+askama = "0.3.4"
+hyper = "0.11"
+
+[build-dependencies]
+askama = "0.3.4"
