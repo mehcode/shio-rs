@@ -1,18 +1,18 @@
 use std::sync::Arc;
 use std::fmt;
 
-use futures::IntoFuture;
 use hyper;
 
-use response::BoxFutureResponse;
+use response::{Response,    BoxFutureResponse};
 use context::Context;
 use handler::Handler;
 use middleware::{self, BoxMiddleware, Middleware};
 use router::Router;
+use ext::IntoFutureExt;
 
 pub struct Stack<H: Handler + 'static>
 where
-    <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
 {
     pub(crate) handler: Arc<H>,
     middlewares: Vec<BoxMiddleware>,
@@ -20,7 +20,7 @@ where
 
 impl<H: Handler + 'static> Stack<H>
 where
-    <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
 {
     pub fn new(handler: H) -> Self {
         Stack {
@@ -41,7 +41,7 @@ where
 
 impl<H: Handler + 'static> Handler for Stack<H>
 where
-    <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
 {
     type Result = BoxFutureResponse<hyper::Error>;
 

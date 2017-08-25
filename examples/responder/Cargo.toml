@@ -1,7 +1,9 @@
 [package]
-name = "time"
+name = "responder"
 version = "0.0.0"
 workspace = "../.."
 
 [dependencies]
 shio = { path = "../../lib" }
+tokio-core = "0.1"
+error-chain = "0.8"

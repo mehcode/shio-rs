@@ -6,7 +6,8 @@ use futures::{future, Future, IntoFuture};
 use response::Response;
 use StatusCode;
 use header::ContentLength;
-use ext::{BoxFuture, FutureExt};
+use ext::{BoxFuture, FutureExt, IntoFutureExt};
+use handler::default_catch;
 
 pub trait Responder {
     type Error: fmt::Debug + Send + Sync;
@@ -58,7 +59,6 @@ where
     #[inline]
     fn to_response(self) -> Self::Result {
         let (status, responder) = self;
-
         responder
             .to_response()
             .into_future()
@@ -70,19 +70,66 @@ where
     }
 }
 
-impl<E: fmt::Debug + Send + Sync, R: Responder<Error = E>> Responder for Result<R, E>
+impl Responder for Response {
+    type Error = hyper::Error;
+    type Result = Response;
+
+    #[inline]
+    fn to_response(self) -> Self::Result {
+        self
+    }
+}
+
+impl<E: fmt::Debug + Send + Sync, R: Responder> Responder for Box<Future<Item = R, Error = E>>
 where
     E: 'static,
+    R: 'static,
+    <<R as Responder>::Result as IntoFuture>::Error: 'static,
     <<R as Responder>::Result as IntoFuture>::Future: 'static,
 {
-    type Error = E;
+    type Error = hyper::Error;
+    type Result = Box<Future<Item = Response, Error = Self::Error>>;
+
+    #[inline]
+    fn to_response(self) -> Self::Result {
+        self.then(|result| match result {
+            Ok(responder) => responder
+                .to_response()
+                .into_future()
+                .or_else(default_catch)
+                .into_box(),
+            Err(error) => future::ok(default_catch(error)).into_box(),
+        }).into_box()
+    }
+}
+
+impl<R: Responder + 'static> IntoFutureExt<Response> for R {
+    type Error = R::Error;
+    type Future = <R::Result as IntoFuture>::Future;
+
+    fn into_future_ext(self) -> Self::Future {
+        self.to_response().into_future()
+    }
+}
+
+impl<E: fmt::Debug + Send + Sync, R: Responder> Responder for Result<R, E>
+where
+    E: 'static,
+    <<R as Responder>::Result as IntoFuture>::Error: 'static,
+    <<R as Responder>::Result as IntoFuture>::Future: 'static,
+{
+    type Error = hyper::Error;
     type Result = BoxFuture<<R::Result as IntoFuture>::Item, Self::Error>;
 
     #[inline]
     fn to_response(self) -> Self::Result {
         match self {
-            Ok(responder) => responder.to_response().into_future().into_box(),
-            Err(error) => future::err(error).into_box(),
+            Ok(responder) => responder
+                .to_response()
+                .into_future()
+                .or_else(default_catch)
+                .into_box(),
+            Err(error) => future::ok(default_catch(error)).into_box(),
         }
     }
 }

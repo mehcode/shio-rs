@@ -3,11 +3,12 @@ use std::fmt;
 
 use hyper;
 use tokio_core::reactor::Handle;
-use futures::{Future, IntoFuture};
+use futures::Future;
 
 use response::Response;
 use handler::{default_catch, Handler};
 use context::Context;
+use ext::IntoFutureExt;
 
 // FIXME: Why does #[derive(Clone)] not work here? This _seems_ like a implementation that
 //        should be auto-derived.
@@ -15,7 +16,7 @@ use context::Context;
 // #[derive(Clone)]
 pub(crate) struct Service<H: Handler + 'static>
 where
-    <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
 {
     handler: Arc<H>,
     handle: Handle,
@@ -23,7 +24,7 @@ where
 
 impl<H: Handler + 'static> Service<H>
 where
-    <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
 {
     pub(crate) fn new(handler: Arc<H>, handle: Handle) -> Self {
         Service { handler, handle }
@@ -32,7 +33,7 @@ where
 
 impl<H: Handler + 'static> Clone for Service<H>
 where
-    <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
 {
     fn clone(&self) -> Self {
         Service {
@@ -44,7 +45,7 @@ where
 
 impl<H: Handler + 'static> hyper::server::Service for Service<H>
 where
-    <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
 {
     type Request = hyper::Request;
     type Response = hyper::Response;
@@ -57,7 +58,7 @@ where
         Box::new(
             self.handler
                 .call(ctx)
-                .into_future()
+                .into_future_ext()
                 .or_else(default_catch)
                 .map(Response::into_hyper_response),
         )

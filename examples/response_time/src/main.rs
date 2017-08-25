@@ -1,6 +1,6 @@
 extern crate shio;
 
-use std::time;
+use std::time::Instant;
 
 use shio::Stack;
 use shio::prelude::*;
@@ -12,19 +12,17 @@ fn hello(_: Context) -> Response {
 // Measures request time in μs and prints it out
 fn timeit(next: BoxHandler) -> BoxHandler {
     (move |ctx: Context| {
-        let time_before = time::Instant::now();
+        let time_before = Instant::now();
 
         // TODO: Use `.inspect` over `.map` when
         //  https://github.com/alexcrichton/futures-rs/pull/565 is merged and available in
         //  a released version
 
-        next.call(ctx).map(move |response| {
-            let d = time::Instant::now().duration_since(time_before);
+        next.call(ctx).inspect(move |_| {
+            let d = Instant::now().duration_since(time_before);
             let elapsed = (d.as_secs() * 1_000_000) + (d.subsec_nanos() as u64 / 1_000);
             println!("Request took {}μs", elapsed);
-
-            response
-        })
+        }).into_box()
     }).into_box()
 }
 
