@@ -137,9 +137,13 @@ where
 #[cfg(test)]
 mod tests {
     use tokio_core::reactor::Core;
-    use futures::{Future, Stream};
+    use futures::{Future, IntoFuture, Stream};
 
     use super::{Responder, Response, StatusCode};
+
+    fn to_response<R: Responder>(r: R) -> Response {
+        Core::new().unwrap().run(r.to_response().into_future()).unwrap()
+    }
 
     fn assert_body(res: Response, expected: &str) {
         let mut core = Core::new().unwrap();
@@ -155,7 +159,7 @@ mod tests {
 
     #[test]
     fn str_to_response() {
-        let res = "Hello\n".to_response();
+        let res = to_response("Hello\n");
 
         assert_eq!(res.status(), StatusCode::Ok);
         assert_body(res, "Hello\n");
@@ -163,7 +167,7 @@ mod tests {
 
     #[test]
     fn string_to_response() {
-        let res = String::from("Hello\n").to_response();
+        let res = to_response(String::from("Hello\n"));
 
         assert_eq!(res.status(), StatusCode::Ok);
         assert_body(res, "Hello\n");
@@ -171,7 +175,7 @@ mod tests {
 
     #[test]
     fn pair_to_response() {
-        let res = (StatusCode::Accepted, "Hello\n").to_response();
+        let res = to_response((StatusCode::Accepted, "Hello\n"));
 
         assert_eq!(res.status(), StatusCode::Accepted);
         assert_body(res, "Hello\n");
@@ -179,7 +183,7 @@ mod tests {
 
     #[test]
     fn status_to_response() {
-        let res = StatusCode::NoContent.to_response();
+        let res = to_response(StatusCode::NoContent);
 
         assert_eq!(res.status(), StatusCode::NoContent);
         assert_body(res, "");
