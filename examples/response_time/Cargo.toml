@@ -1,5 +1,5 @@
 [package]
-name = "time"
+name = "response_time"
 version = "0.0.0"
 workspace = "../.."
 

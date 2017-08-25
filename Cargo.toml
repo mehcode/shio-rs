@@ -8,6 +8,6 @@ members = [
   "examples/json",
   "examples/proxy",
   "examples/state",
-  "examples/time",
+  "examples/response_time",
   "examples/redirect",
 ]
