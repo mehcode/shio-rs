@@ -19,28 +19,101 @@
 shio = "0.0.6"
 ```
 
-## Example
-
 ```rust
 extern crate shio;
 
 use shio::prelude::*;
 
 fn hello_world(_: Context) -> &'static str {
-  "Hello World\n"
+    "Hello World\n"
 }
 
 fn main() {
-  Shio::default().route((Method::Get, "/", hello_world)).run(":7878").unwrap();
+    Shio::default()
+        .route((Method::Get, "/", hello_world))
+        .run(":7878").unwrap();
 }
 ```
 
-See the [examples](https://github.com/mehcode/shio-rs/tree/master/examples) for more usage information.
+## Examples
 
-To run a specific example, use:
+### [Proxy Request](examples/proxy/src/main.rs)
+
+Handlers may return a value that implements `Responder` or a `BoxFuture<T, E>`
+where `T` implements `Responder`.
+
+For some concrete examples, you may return
+a `String`, a `BoxFuture<StatusCode, _>`,
+a `&'static str`, or a `BoxFuture<Response, _>`. `Responder` is implemented
+for many other primitive types and is meant to serve as an integration point
+for external crates like [Askama](https://github.com/djc/askama).
+
+```rust
+extern crate hyper;
+extern crate shio;
+
+use shio::prelude::*;
+use hyper::Client;
+
+fn proxy(ctx: Context) -> BoxFuture<Response, hyper::Error> {
+    // Additional work can be scheduled on the thread-local event loop,
+    // as each handler receives a reference to it
+    Client::new(&ctx)
+        .get("http://www.google.com".parse().unwrap())
+        // Map the _streaming_ response from google into a _streaming_
+        // response from us
+        .map(|res| Response::build().body(res.body()))
+        // Use `.into_box` to turn this future stream into a `BoxFuture`
+        // that can be easily returned on stable Rust.
+        //
+        // When `impl Trait` becomes available on stable Rust, this
+        // necessity will go away
+        .into_box()
+}
+
+// fn main omitted [...]
+```
+
+### [Stateful](examples/state/src/main.rs)
+
+Handlers are **not** cloned on each request and therefore may contain state.
+Note that any fields must be `Send + Sync`.
+
+```rust
+extern crate shio;
+
+use std::thread;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use shio::prelude::*;
+
+#[derive(Default)]
+struct HandlerWithState {
+    counter: AtomicUsize,
+}
+
+impl shio::Handler for HandlerWithState {
+    type Result = String;
+
+    fn call(&self, _: Context) -> Self::Result {
+        let counter = self.counter.fetch_add(1, Ordering::Relaxed);
+
+        format!(
+            "Hi, #{} (from thread: {:?})\n",
+            counter,
+            thread::current().id()
+        )
+    }
+}
+```
+
+### Even More Examples
+
+Many more usage [examples/](https://github.com/mehcode/shio-rs/tree/master/examples) are included with Shio.
+
+Examples may be ran with `cargo run -p <example name>`. For instance, to run the `hello` example, use:
 
 ```bash
-$ cargo run -p <example name>
+$ cargo run -p hello
 ```
 
 ## License
