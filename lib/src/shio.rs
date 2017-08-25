@@ -4,7 +4,7 @@ use std::fmt;
 use std::net::SocketAddr;
 
 use num_cpus;
-use futures::{future, IntoFuture, Stream};
+use futures::{future, Stream};
 use hyper::server::Http;
 use tokio_core::net::TcpListener;
 use tokio_core::reactor::Core;
@@ -16,14 +16,15 @@ use net2::unix::UnixTcpBuilderExt;
 use handler::Handler;
 use router::{Route, Router};
 use errors::ListenError;
-use ext::ToSocketAddrsExt;
+use response::Response;
+use ext::{IntoFutureExt, ToSocketAddrsExt};
 use service::Service;
 use stack::Stack;
 use middleware;
 
 pub struct Shio<H: Handler + 'static>
 where
-    <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
 {
     handler: Arc<H>,
     threads: usize,
@@ -31,7 +32,7 @@ where
 
 impl<H: Handler> Shio<H>
 where
-    <H::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
 {
     pub fn new(handler: H) -> Self {
         Shio {
