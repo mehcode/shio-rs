@@ -20,7 +20,7 @@ use middleware::Middleware;
 /// ```rust
 /// # use shio::{Stack, middleware};
 /// // Custom Stack with Recover middleware
-/// Stack::new().with(middleware::Recover);
+/// Stack::new(|_| { /* [...] */ }).with(middleware::Recover);
 ///
 /// // Default Stack with Recover middleware
 /// Stack::default();
