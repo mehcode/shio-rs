@@ -112,6 +112,7 @@ impl<R: Responder + 'static> IntoFutureExt<Response> for R {
     }
 }
 
+#[cfg(not(feature = "nightly"))]
 impl<E: fmt::Debug + Send + Sync, R: Responder> Responder for Result<R, E>
 where
     E: 'static,
@@ -130,6 +131,54 @@ where
                 .or_else(default_catch)
                 .into_box(),
             Err(error) => future::ok(default_catch(error)).into_box(),
+        }
+    }
+}
+
+#[cfg(feature = "nightly")]
+impl<E: fmt::Debug + Send + Sync, R: Responder> Responder for Result<R, E>
+where
+    E: 'static,
+    <<R as Responder>::Result as IntoFuture>::Error: 'static,
+    <<R as Responder>::Result as IntoFuture>::Future: 'static,
+{
+    type Error = hyper::Error;
+    type Result = BoxFuture<<R::Result as IntoFuture>::Item, Self::Error>;
+
+    #[inline]
+    default fn to_response(self) -> Self::Result {
+        match self {
+            Ok(responder) => responder
+                .to_response()
+                .into_future()
+                .or_else(default_catch)
+                .into_box(),
+            Err(error) => future::ok(default_catch(error)).into_box(),
+        }
+    }
+}
+
+#[cfg(feature = "nightly")]
+impl<E: Responder + fmt::Debug + Send + Sync, R: Responder> Responder for Result<R, E>
+where
+    E: 'static,
+    <<R as Responder>::Result as IntoFuture>::Error: 'static,
+    <<R as Responder>::Result as IntoFuture>::Future: 'static,
+{
+    #[inline]
+    fn to_response(self) -> Self::Result {
+        match self {
+            Ok(responder) => responder
+                .to_response()
+                .into_future()
+                .or_else(default_catch)
+                .into_box(),
+
+            Err(eresponder) => eresponder
+                .to_response()
+                .into_future()
+                .or_else(default_catch)
+                .into_box(),
         }
     }
 }
