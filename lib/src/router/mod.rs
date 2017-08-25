@@ -120,19 +120,10 @@ mod tests {
     fn empty_handler(_: Context) {
     }
 
-    // Construct a router with the provided routes
-    fn router(routes: &[&'static str]) -> Router {
-        let mut router = Router::new();
-        for route in routes {
-            let route = Route::from((Get, *route, empty_handler));
-            router.add(route);
-        }
-
-        router
-    }
-
     #[test]
     fn test_static() {
+        // Some match
+        // GET
         let mut router = Router::new();
         router.add((Get, "/hello", empty_handler));
 
@@ -140,6 +131,8 @@ mod tests {
         assert!(router.find(&Get, "/aa").is_none());
         assert!(router.find(&Get, "/hello/asfa").is_none());
 
+        // Some match
+        // PUT, POST, DELETE
         let mut router = Router::new();
         router.add((Put, "/hello", empty_handler));
         router.add((Post, "/hello", empty_handler));
@@ -149,5 +142,16 @@ mod tests {
         assert!(router.find(&Put, "/hello").is_some());
         assert!(router.find(&Post, "/hello").is_some());
         assert!(router.find(&Delete, "/hello").is_some());
+
+        // Correct match
+        let mut router = Router::new();
+        router.add((Get, "/aa", empty_handler));
+        router.add((Get, "/hello", empty_handler));
+
+        // FIXME: This section currently matches against regex
+        //        This is an implementation detail; store the source strings and we'll
+        //        match against that
+        assert_eq!(router.find(&Get, "/hello").unwrap().pattern(), "^/hello/?$");
+        assert_eq!(router.find(&Get, "/aa").unwrap().pattern(), "^/aa/?$");
     }
 }
