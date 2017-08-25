@@ -4,6 +4,8 @@ mod responder;
 pub use self::builder::Builder;
 pub use self::responder::Responder;
 
+use std::fmt;
+
 use futures::{Future, IntoFuture};
 use futures::future::{self, FutureResult};
 use hyper;
@@ -27,7 +29,10 @@ impl Response {
         Default::default()
     }
 
-    pub fn with<R: Responder>(responder: R) -> R::Result {
+    pub fn with<R: Responder>(responder: R) -> R::Result
+    where
+        <R::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
+    {
         responder.to_response()
     }
 

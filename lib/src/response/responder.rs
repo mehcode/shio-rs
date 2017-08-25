@@ -9,15 +9,16 @@ use header::ContentLength;
 use ext::{BoxFuture, FutureExt, IntoFutureExt};
 use handler::default_catch;
 
-pub trait Responder {
-    type Error: fmt::Debug + Send + Sync;
-    type Result: IntoFuture<Item = Response, Error = Self::Error>;
+pub trait Responder
+where
+    <Self::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
+{
+    type Result: IntoFuture<Item = Response>;
 
     fn to_response(self) -> Self::Result;
 }
 
 impl Responder for () {
-    type Error = hyper::Error;
     type Result = Response;
 
     #[inline]
@@ -27,7 +28,6 @@ impl Responder for () {
 }
 
 impl<'a> Responder for &'a str {
-    type Error = hyper::Error;
     type Result = Response;
 
     #[inline]
@@ -37,7 +37,6 @@ impl<'a> Responder for &'a str {
 }
 
 impl Responder for String {
-    type Error = hyper::Error;
     type Result = Response;
 
     #[inline]
@@ -49,7 +48,6 @@ impl Responder for String {
 }
 
 impl Responder for StatusCode {
-    type Error = hyper::Error;
     type Result = Response;
 
     #[inline]
@@ -58,13 +56,12 @@ impl Responder for StatusCode {
     }
 }
 
-impl<E: fmt::Debug + Send + Sync, R: Responder<Error = E>> Responder for (StatusCode, R)
+impl<R: Responder> Responder for (StatusCode, R)
 where
-    E: 'static,
+    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
     <<R as Responder>::Result as IntoFuture>::Future: 'static,
 {
-    type Error = E;
-    type Result = BoxFuture<<R::Result as IntoFuture>::Item, Self::Error>;
+    type Result = BoxFuture<<R::Result as IntoFuture>::Item, <R::Result as IntoFuture>::Error>;
 
     #[inline]
     fn to_response(self) -> Self::Result {
@@ -81,7 +78,6 @@ where
 }
 
 impl Responder for Response {
-    type Error = hyper::Error;
     type Result = Response;
 
     #[inline]
@@ -90,15 +86,14 @@ impl Responder for Response {
     }
 }
 
-impl<E: fmt::Debug + Send + Sync, R: Responder> Responder for Box<Future<Item = R, Error = E>>
+impl<E, R> Responder for Box<Future<Item = R, Error = E>>
 where
-    E: 'static,
-    R: 'static,
-    <<R as Responder>::Result as IntoFuture>::Error: 'static,
+    E: fmt::Debug + Send + Sync + 'static,
+    R: Responder + 'static,
+    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
     <<R as Responder>::Result as IntoFuture>::Future: 'static,
 {
-    type Error = hyper::Error;
-    type Result = Box<Future<Item = Response, Error = Self::Error>>;
+    type Result = Box<Future<Item = Response, Error = hyper::Error>>;
 
     #[inline]
     fn to_response(self) -> Self::Result {
@@ -113,8 +108,10 @@ where
     }
 }
 
-impl<R: Responder + 'static> IntoFutureExt<Response> for R {
-    type Error = R::Error;
+impl<R: Responder + 'static> IntoFutureExt<Response> for R
+    where <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + Sync
+{
+    type Error = <R::Result as IntoFuture>::Error;
     type Future = <R::Result as IntoFuture>::Future;
 
     fn into_future_ext(self) -> Self::Future {
@@ -123,14 +120,14 @@ impl<R: Responder + 'static> IntoFutureExt<Response> for R {
 }
 
 #[cfg(not(feature = "nightly"))]
-impl<E: fmt::Debug + Send + Sync, R: Responder> Responder for Result<R, E>
+impl<E, R> Responder for Result<R, E>
 where
-    E: 'static,
-    <<R as Responder>::Result as IntoFuture>::Error: 'static,
+    E: fmt::Debug + Send + Sync + 'static,
+    R: Responder + 'static,
+    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
     <<R as Responder>::Result as IntoFuture>::Future: 'static,
 {
-    type Error = hyper::Error;
-    type Result = BoxFuture<<R::Result as IntoFuture>::Item, Self::Error>;
+    type Result = BoxFuture<<R::Result as IntoFuture>::Item, hyper::Error>;
 
     #[inline]
     fn to_response(self) -> Self::Result {
@@ -146,14 +143,15 @@ where
 }
 
 #[cfg(feature = "nightly")]
-impl<E: fmt::Debug + Send + Sync, R: Responder> Responder for Result<R, E>
+impl<E, R> Responder for Result<R, E>
 where
-    E: 'static,
-    <<R as Responder>::Result as IntoFuture>::Error: 'static,
+    E: fmt::Debug + Send + Sync + 'static,
+    R: Responder + 'static,
+    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
     <<R as Responder>::Result as IntoFuture>::Future: 'static,
 {
     type Error = hyper::Error;
-    type Result = BoxFuture<<R::Result as IntoFuture>::Item, Self::Error>;
+    type Result = BoxFuture<<R::Result as IntoFuture>::Item, E>;
 
     #[inline]
     default fn to_response(self) -> Self::Result {
@@ -169,10 +167,11 @@ where
 }
 
 #[cfg(feature = "nightly")]
-impl<E: Responder + fmt::Debug + Send + Sync, R: Responder> Responder for Result<R, E>
+impl<E, R> Responder for Result<R, E>
 where
-    E: 'static,
-    <<R as Responder>::Result as IntoFuture>::Error: 'static,
+    E: Responder + fmt::Debug + Send + Sync + 'static,
+    R: Responder + 'static,
+    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
     <<R as Responder>::Result as IntoFuture>::Future: 'static,
 {
     #[inline]
@@ -195,12 +194,17 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::fmt;
+
     use tokio_core::reactor::Core;
     use futures::{Future, IntoFuture, Stream};
 
     use super::{Responder, Response, StatusCode};
 
-    fn to_response<R: Responder>(r: R) -> Response {
+    fn to_response<R: Responder>(r: R) -> Response
+    where
+        <R::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
+    {
         Core::new()
             .unwrap()
             .run(r.to_response().into_future())
