@@ -4,9 +4,9 @@ use hyper::{self, Method};
 
 use context::Context;
 use handler::{BoxHandler, Handler};
-use response::{Response, BoxFutureResponse};
+use response::Response;
 use router::pattern::Pattern;
-use ext::IntoFutureExt;
+use ext::{BoxFuture, IntoFutureExt};
 
 /// Route contains a [`Handler`] and information for matching against requests.
 pub struct Route {
@@ -62,7 +62,7 @@ where
 }
 
 impl Handler for Route {
-    type Result = BoxFutureResponse<hyper::Error>;
+    type Result = BoxFuture<Response, hyper::Error>;
 
     #[inline]
     fn call(&self, ctx: Context) -> Self::Result {

@@ -3,10 +3,10 @@ use std::fmt;
 use futures::Future;
 use hyper;
 
-use response::{BoxFutureResponse, Response};
+use response::{Response};
 use context::Context;
 use StatusCode;
-use ext::{FutureExt, IntoFutureExt};
+use ext::{FutureExt, IntoFutureExt, BoxFuture};
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value, use_debug))]
 pub(crate) fn default_catch<E: fmt::Debug + Send>(err: E) -> Response {
@@ -38,7 +38,7 @@ where
     where
         Self: Sized + 'static,
     {
-        Box::new(move |ctx: Context| -> BoxFutureResponse<hyper::Error> {
+        Box::new(move |ctx: Context| -> BoxFuture<Response, hyper::Error> {
             self.call(ctx)
                 .into_future_ext()
                 .or_else(default_catch)
@@ -48,7 +48,7 @@ where
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(stutter))]
-pub type BoxHandler = Box<Handler<Result = BoxFutureResponse<hyper::Error>>>;
+pub type BoxHandler = Box<Handler<Result = BoxFuture<Response, hyper::Error>>>;
 
 impl<TError, TFuture, TFn> Handler for TFn
 where

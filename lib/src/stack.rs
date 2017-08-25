@@ -3,12 +3,12 @@ use std::fmt;
 
 use hyper;
 
-use response::{Response,    BoxFutureResponse};
+use response::Response;
 use context::Context;
 use handler::Handler;
 use middleware::{self, BoxMiddleware, Middleware};
 use router::Router;
-use ext::IntoFutureExt;
+use ext::{BoxFuture, IntoFutureExt};
 
 pub struct Stack<H: Handler + 'static>
 where
@@ -43,7 +43,7 @@ impl<H: Handler + 'static> Handler for Stack<H>
 where
     <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
 {
-    type Result = BoxFutureResponse<hyper::Error>;
+    type Result = BoxFuture<Response, hyper::Error>;
 
     #[inline]
     fn call(&self, ctx: Context) -> Self::Result {

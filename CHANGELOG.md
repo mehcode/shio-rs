@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Deprecated
+  - `BoxFutureResponse<E>` is being removed in favor of a more explicit `BoxFuture<Response>` now that a `Handler` may return _any_ type that implements `Responder`.
+
 ## [0.0.5] - 2017-08-23
 ### Added
   - Added `response::Builder`. Construct with `Response::build()`.
@@ -21,12 +25,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Add `BoxFuture<T, E>` and `FutureExt::into_box` to try and ease box construction to write handlers when not using `impl Trait`. Any `Future` may have `.into_box` applied to it to turn it into a `Box<Future>`.
 
     ```rust
-    fn proxy_google(ctx: Context) -> BoxFutureResponse<hyper::Error> {
+    fn proxy_google(ctx: Context) -> BoxFuture<Response, hyper::Error> {
         Client::new(&ctx)
             .get("http://www.google.com".parse().unwrap())
             .map(|res| Response::build().body(res.body()))
             // Future turned into Box<Future<Item = Response, Error = hyper::Error>>
-            // which BoxFutureResponse<hyper::Error> is an alias of
+            // which BoxFuture<Response, hyper::Error> is an alias of
             .into_box()
     }
     ```

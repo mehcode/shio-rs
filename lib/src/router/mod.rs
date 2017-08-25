@@ -1,6 +1,9 @@
 mod route;
 mod pattern;
 
+pub use router::route::Route;
+pub use router::pattern::Pattern;
+
 use std::collections::HashMap;
 
 use hyper::{self, Method, StatusCode};
@@ -9,9 +12,8 @@ use futures::future;
 
 use handler::Handler;
 use context::Context;
-use response::{BoxFutureResponse, Response};
-pub use router::route::Route;
-pub use router::pattern::Pattern;
+use response::{Response};
+use ext::BoxFuture;
 
 // From: https://github.com/crumblingstatue/try_opt/blob/master/src/lib.rs#L30
 macro_rules! try_opt {
@@ -90,7 +92,7 @@ impl Router {
 }
 
 impl Handler for Router {
-    type Result = BoxFutureResponse<hyper::Error>;
+    type Result = BoxFuture<Response, hyper::Error>;
 
     #[inline]
     fn call(&self, ctx: Context) -> Self::Result {

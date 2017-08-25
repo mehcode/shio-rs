@@ -13,9 +13,7 @@ extern crate hyper;
 use shio::prelude::*;
 use hyper::Client;
 
-// Handlers return a `shio::Response` or a `shio::BoxFutureResponse`. The latter defaults the
-// error type to `Box<::std::error::Error>`.
-fn proxy_google(ctx: Context) -> BoxFutureResponse<hyper::Error> {
+fn proxy_google(ctx: Context) -> BoxFuture<Response, hyper::Error> {
     Client::new(&ctx)
         .get("http://www.google.com".parse().unwrap())
         .map(|res| Response::build().body(res.body()))
