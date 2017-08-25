@@ -109,3 +109,45 @@ impl Handler for Router {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Router, Route};
+    use Method::*;
+    use Context;
+
+    // Empty handler to use for route tests
+    fn empty_handler(_: Context) {
+    }
+
+    // Construct a router with the provided routes
+    fn router(routes: &[&'static str]) -> Router {
+        let mut router = Router::new();
+        for route in routes {
+            let route = Route::from((Get, *route, empty_handler));
+            router.add(route);
+        }
+
+        router
+    }
+
+    #[test]
+    fn test_static() {
+        let mut router = Router::new();
+        router.add((Get, "/hello", empty_handler));
+
+        assert!(router.find(&Get, "/hello").is_some());
+        assert!(router.find(&Get, "/aa").is_none());
+        assert!(router.find(&Get, "/hello/asfa").is_none());
+
+        let mut router = Router::new();
+        router.add((Put, "/hello", empty_handler));
+        router.add((Post, "/hello", empty_handler));
+        router.add((Delete, "/hello", empty_handler));
+
+        assert!(router.find(&Get, "/hello").is_none());
+        assert!(router.find(&Put, "/hello").is_some());
+        assert!(router.find(&Post, "/hello").is_some());
+        assert!(router.find(&Delete, "/hello").is_some());
+    }
+}
