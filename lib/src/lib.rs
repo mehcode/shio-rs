@@ -37,6 +37,6 @@ pub mod prelude {
     pub use super::{header, BoxFutureResponse, BoxHandler, Context, Handler, Method, Response,
                     Shio, StatusCode};
 
-    pub use futures::Future;
-    pub use ext::{BoxFuture, FutureExt};
+    pub use futures::{Future, IntoFuture};
+    pub use ext::{BoxFuture, FutureExt, IntoFutureExt};
 }

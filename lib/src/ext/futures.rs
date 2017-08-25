@@ -1,3 +1,5 @@
+use std::fmt;
+
 use futures::Future;
 
 /// A type alias for Box<Item = T, Error = E>
@@ -14,3 +16,10 @@ pub trait FutureExt: Future {
 }
 
 impl<F: Future> FutureExt for F {}
+
+pub trait IntoFutureExt<T> {
+    type Error: fmt::Debug + Send + Sync;
+    type Future: Future<Item = T, Error = Self::Error>;
+
+    fn into_future_ext(self) -> Self::Future;
+}
