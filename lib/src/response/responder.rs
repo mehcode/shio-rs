@@ -142,7 +142,10 @@ mod tests {
     use super::{Responder, Response, StatusCode};
 
     fn to_response<R: Responder>(r: R) -> Response {
-        Core::new().unwrap().run(r.to_response().into_future()).unwrap()
+        Core::new()
+            .unwrap()
+            .run(r.to_response().into_future())
+            .unwrap()
     }
 
     fn assert_body(res: Response, expected: &str) {

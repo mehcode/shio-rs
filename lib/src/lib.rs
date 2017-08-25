@@ -25,7 +25,7 @@ pub mod router;
 
 pub use hyper::{header, Method, StatusCode};
 
-pub use response::{Response};
+pub use response::Response;
 pub use shio::Shio;
 pub use context::Context;
 pub use handler::{BoxHandler, Handler};
@@ -34,8 +34,7 @@ pub use stack::Stack;
 
 /// Re-exports important traits and types. Meant to be glob imported when using Shio.
 pub mod prelude {
-    pub use super::{header, BoxHandler, Context, Handler, Method, Response,
-                    Shio, StatusCode};
+    pub use super::{header, BoxHandler, Context, Handler, Method, Response, Shio, StatusCode};
 
     pub use futures::{Future, IntoFuture};
     pub use ext::{BoxFuture, FutureExt, IntoFutureExt};

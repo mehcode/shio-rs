@@ -3,10 +3,10 @@ use std::fmt;
 use futures::Future;
 use hyper;
 
-use response::{Response};
+use response::Response;
 use context::Context;
 use StatusCode;
-use ext::{FutureExt, IntoFutureExt, BoxFuture};
+use ext::{BoxFuture, FutureExt, IntoFutureExt};
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value, use_debug))]
 pub(crate) fn default_catch<E: fmt::Debug + Send>(err: E) -> Response {

@@ -10,7 +10,7 @@ extern crate error_chain;
 use std::time::Duration;
 use shio::prelude::*;
 use tokio_core::reactor::Timeout;
-use errors::{Result, Error};
+use errors::{Error, Result};
 
 mod errors {
     // We're using error-chain! here to showcase usage of it, even though we technically don't

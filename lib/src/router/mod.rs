@@ -12,7 +12,7 @@ use futures::future;
 
 use handler::Handler;
 use context::Context;
-use response::{Response};
+use response::Response;
 use ext::BoxFuture;
 
 // From: https://github.com/crumblingstatue/try_opt/blob/master/src/lib.rs#L30

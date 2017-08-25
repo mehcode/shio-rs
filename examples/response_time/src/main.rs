@@ -14,11 +14,13 @@ fn timeit(next: BoxHandler) -> BoxHandler {
     (move |ctx: Context| {
         let time_before = Instant::now();
 
-        next.call(ctx).inspect(move |_| {
-            let d = Instant::now().duration_since(time_before);
-            let elapsed = (d.as_secs() * 1_000_000) + (d.subsec_nanos() as u64 / 1_000);
-            println!("Request took {}μs", elapsed);
-        }).into_box()
+        next.call(ctx)
+            .inspect(move |_| {
+                let d = Instant::now().duration_since(time_before);
+                let elapsed = (d.as_secs() * 1_000_000) + (d.subsec_nanos() as u64 / 1_000);
+                println!("Request took {}μs", elapsed);
+            })
+            .into_box()
     }).into_box()
 }
 
