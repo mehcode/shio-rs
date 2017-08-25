@@ -10,6 +10,8 @@
 
  - **Multithreaded**. By default, requests are handled by multiple threads, each running an event loop powered by `tokio`.
 
+ - **Stability**. Shio is fully committed to working and continuing to work on **stable** Rust.
+
 ### WARNING: Shio is at 0.0.x which means the API is highly unstable. Use at your own risk. See [#1](https://github.com/mehcode/shio-rs/issues/1) to discuss our general direction.
 
 ## Usage
