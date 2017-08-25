@@ -4,9 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.0.6] - 2017-08-24
+### Added
+  - Added `middleware::Recover` (included by default with `Shio::default`) to recover from `panic!` and return a 500 - from [@Meralis40]
+
+### Changed
+  - `Responder` returns a value that implements `IntoFuture<Item = Response>` now. This allows `Responder`s to be fallible.
+  - `Handler` may return a `Responder` directly instead of through the `Response::with` wrapper
+
 ### Deprecated
   - `BoxFutureResponse<E>` is being removed in favor of a more explicit `BoxFuture<Response>` now that a `Handler` may return _any_ type that implements `Responder`.
+
+[@Meralis40]: https://github.com/Meralis40
 
 ## [0.0.5] - 2017-08-23
 ### Added
@@ -79,7 +88,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Asynchronous `Handler` that can be a simple function.
   - Service for `tokio` that is a multithreaded abstraction over `Handler`.
 
-[Unreleased]: ../../compare/v0.0.5...HEAD
+[Unreleased]: ../../compare/v0.0.6...HEAD
+[0.0.6]: ../../compare/v0.0.5...v0.0.6
 [0.0.5]: ../../compare/v0.0.4...v0.0.5
 [0.0.4]: ../../compare/v0.0.3...v0.0.4
 [0.0.3]: ../../compare/v0.0.2...v0.0.3
