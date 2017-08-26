@@ -120,19 +120,20 @@ mod tests {
     fn empty_handler(_: Context) {
     }
 
+    /// Test for _some_ match for static in GET
     #[test]
-    fn test_static() {
-        // Some match
-        // GET
+    fn test_static_get() {
         let mut router = Router::new();
         router.add((Get, "/hello", empty_handler));
 
         assert!(router.find(&Get, "/hello").is_some());
         assert!(router.find(&Get, "/aa").is_none());
         assert!(router.find(&Get, "/hello/asfa").is_none());
+    }
 
-        // Some match
-        // PUT, POST, DELETE
+    /// Test for _some_ match for static in PUT, POST, DELETE
+    #[test]
+    fn test_static_put_post_del() {
         let mut router = Router::new();
         router.add((Put, "/hello", empty_handler));
         router.add((Post, "/hello", empty_handler));
@@ -142,7 +143,11 @@ mod tests {
         assert!(router.find(&Put, "/hello").is_some());
         assert!(router.find(&Post, "/hello").is_some());
         assert!(router.find(&Delete, "/hello").is_some());
+    }
 
+    /// Test for the _correct_ match for static
+    #[test]
+    fn test_static_find() {
         // Correct match
         let mut router = Router::new();
         router.add((Get, "/aa", empty_handler));
