@@ -109,7 +109,8 @@ where
 }
 
 impl<R: Responder + 'static> IntoFutureExt<Response> for R
-    where <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + Sync
+where
+    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
 {
     type Error = <R::Result as IntoFuture>::Error;
     type Future = <R::Result as IntoFuture>::Future;
