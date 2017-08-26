@@ -3,7 +3,7 @@ extern crate shio;
 use shio::prelude::*;
 
 // Simple requests should be simple, even in the face of asynchronous design.
-fn index(_: Context) -> &'static str {
+fn hello_world(_: Context) -> &'static str {
     // Handlers may return a value that implements `Responder`
     // &str implements `Responder` and sets both the body and the `Content-Length` header
     "Hello World!\n"
@@ -21,11 +21,18 @@ fn index(_: Context) -> &'static str {
     // The default status code is `Status::Ok` (200).
 }
 
+fn hello(_: Context) -> String {
+    // ?!
+
+    format!("Hello, {}!", "George")
+}
+
 fn main() {
     // Construct a _default_ `Shio` service, mount the `index` handler, and
     // run indefinitely on port `7878` (by default, binds to both `0.0.0.0` and `::0`).
     Shio::default()
-        .route((Method::Get, "/", index))
+        .route((Method::Get, "/", hello_world))
+        .route((Method::Get, "/{name}", hello))
         .run(":7878")
         .unwrap();
 

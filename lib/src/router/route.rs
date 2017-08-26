@@ -45,8 +45,8 @@ impl Route {
     }
 
     #[inline]
-    pub(crate) fn pattern(&self) -> &str {
-        self.pattern.as_str()
+    pub(crate) fn pattern(&self) -> &Pattern {
+        &self.pattern
     }
 }
 
