@@ -1,10 +1,7 @@
 use std::ops::Deref;
 use std::str::FromStr;
 
-use hyper::Uri;
-use regex::Regex;
-
-// TODO: Implement a formal route parser to handle `:param` and `*` segments.
+use regex::{Regex, Error as RegexError};
 
 pub struct Pattern(Regex);
 
@@ -17,42 +14,127 @@ impl Deref for Pattern {
 }
 
 impl FromStr for Pattern {
-    type Err = ();
+    type Err = RegexError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut pattern = String::from("^");
-
-        if !s.is_empty() && s != "/" {
-            let mut s = String::from(s);
-
-            if !s.starts_with('/') {
-                s.insert(0, '/');
-            }
-
-            pattern.push_str(Uri::from_str(&s).unwrap().path());
-        }
-
-        pattern.push_str("/?$");
-
-        Ok(Pattern(Regex::new(&pattern).unwrap()))
+    fn from_str(pattern: &str) -> Result<Self, Self::Err> {
+        Ok(Pattern(Regex::new(&parse(pattern))?))
     }
 }
 
 impl<'a> From<&'a str> for Pattern {
     fn from(val: &'a str) -> Self {
+        // FIXME: What should we do here? I think it is a good idea to
+        //        crash on boot if your routes are invalid.. but is `.unwrap` here
+        //        the best way to do that?
         val.parse().unwrap()
     }
 }
 
+impl From<Regex> for Pattern {
+    fn from(val: Regex) -> Self {
+        Pattern(val)
+    }
+}
+
+fn parse(pattern: &str) -> String {
+    let mut re = String::from("^/");
+    let mut in_param = false;
+    let mut param_name = String::new();
+    let mut params = Vec::new();
+
+    for (index, ch) in pattern.chars().enumerate() {
+        // All routes must have a leading slash so its optional to have one
+        if index == 0 && ch == '/' {
+            continue;
+        }
+
+        if in_param {
+            // In parameter segment: `{....}`
+            if ch == '}' {
+                // Exit the parameter segment
+                re.push_str(&format!(r"(?P<{}>[^/]+)", &param_name));
+                params.push(param_name.clone());
+                in_param = false;
+            } else {
+                param_name.push(ch);
+            }
+        } else if ch == '{' {
+            // Enter a parameter segment
+            in_param = true;
+            param_name.clear();
+        } else {
+            re.push(ch);
+        }
+    }
+
+    re.push('$');
+    re
+}
+
 #[cfg(test)]
 mod tests {
-    use super::Pattern;
+    use regex::Regex;
+    use super::parse;
+
+    fn assert_parse(pattern: &str, expected_re: &str) -> Regex {
+        let re_str = parse(pattern);
+        assert_eq!(&*re_str, expected_re);
+
+        let re = Regex::new(&re_str);
+        println!("{:?}", re);
+        assert!(re.is_ok());
+
+        re.unwrap()
+    }
 
     #[test]
-    fn test_parse() {
-        assert_eq!(Pattern::from("").as_str(), "^/?$");
-        assert_eq!(Pattern::from("/").as_str(), "^/?$");
-        assert_eq!(Pattern::from("users").as_str(), "^/users/?$");
-        assert_eq!(Pattern::from("/users").as_str(), "^/users/?$");
+    fn test_parse_static() {
+        let re = assert_parse("/", r"^/$");
+        assert!(re.is_match("/"));
+        assert!(!re.is_match("/a"));
+
+        let re = assert_parse("/user", r"^/user$");
+        assert!(re.is_match("/user"));
+        assert!(!re.is_match("/user1"));
+        assert!(!re.is_match("/user/"));
+
+        let re = assert_parse("/user/", r"^/user/$");
+        assert!(re.is_match("/user/"));
+        assert!(!re.is_match("/user"));
+        assert!(!re.is_match("/user/gs"));
+
+        let re = assert_parse("/user/profile", r"^/user/profile$");
+        assert!(re.is_match("/user/profile"));
+        assert!(!re.is_match("/user/profile/profile"));
+    }
+
+    #[test]
+    fn test_parse_param() {
+        let re = assert_parse("/user/{id}", r"^/user/(?P<id>[^/]+)$");
+        assert!(re.is_match("/user/profile"));
+        assert!(re.is_match("/user/2345"));
+        assert!(!re.is_match("/user/2345/"));
+        assert!(!re.is_match("/user/2345/sdg"));
+
+        let captures = re.captures("/user/profile").unwrap();
+        assert_eq!(captures.get(1).unwrap().as_str(), "profile");
+        assert_eq!(captures.name("id").unwrap().as_str(), "profile");
+
+        let captures = re.captures("/user/1245125").unwrap();
+        assert_eq!(captures.get(1).unwrap().as_str(), "1245125");
+        assert_eq!(captures.name("id").unwrap().as_str(), "1245125");
+
+        let re = assert_parse(
+            "/v{version}/resource/{id}",
+            r"^/v(?P<version>[^/]+)/resource/(?P<id>[^/]+)$",
+        );
+        assert!(re.is_match("/v1/resource/320120"));
+        assert!(!re.is_match("/v/resource/1"));
+        assert!(!re.is_match("/resource"));
+
+        let captures = re.captures("/v151/resource/adahg32").unwrap();
+        assert_eq!(captures.get(1).unwrap().as_str(), "151");
+        assert_eq!(captures.name("version").unwrap().as_str(), "151");
+        assert_eq!(captures.name("id").unwrap().as_str(), "adahg32");
     }
 }

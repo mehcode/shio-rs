@@ -117,8 +117,7 @@ mod tests {
     use Context;
 
     // Empty handler to use for route tests
-    fn empty_handler(_: Context) {
-    }
+    fn empty_handler(_: Context) {}
 
     /// Test for _some_ match for static in GET
     #[test]
@@ -145,7 +144,7 @@ mod tests {
         assert!(router.find(&Delete, "/hello").is_some());
     }
 
-    /// Test for the _correct_ match for static
+    /// Test for the correct match for static
     #[test]
     fn test_static_find() {
         // Correct match
@@ -156,7 +155,19 @@ mod tests {
         // FIXME: This section currently matches against regex
         //        This is an implementation detail; store the source strings and we'll
         //        match against that
-        assert_eq!(router.find(&Get, "/hello").unwrap().pattern(), "^/hello/?$");
-        assert_eq!(router.find(&Get, "/aa").unwrap().pattern(), "^/aa/?$");
+        assert_eq!(router.find(&Get, "/hello").unwrap().pattern(), "^/hello$");
+        assert_eq!(router.find(&Get, "/aa").unwrap().pattern(), "^/aa$");
+    }
+
+    /// Test for some match for segment parameter
+    #[test]
+    fn test_param_get() {
+        let mut router = Router::new();
+        router.add((Get, "/user/{id}", empty_handler));
+
+        assert!(router.find(&Get, "/user/asfa").is_some());
+        assert!(router.find(&Get, "/user/profile").is_some());
+        assert!(router.find(&Get, "/user/3289").is_some());
+        assert!(router.find(&Get, "/user").is_none());
     }
 }
