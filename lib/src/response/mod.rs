@@ -29,7 +29,7 @@ impl Response {
         Default::default()
     }
 
-    pub fn with<R: Responder>(responder: R) -> R::Result
+    pub fn with<'r, R: Responder<'r>>(responder: R) -> R::Result
     where
         <R::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
     {

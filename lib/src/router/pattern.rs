@@ -1,7 +1,7 @@
 use std::ops::Deref;
 use std::str::FromStr;
 
-use regex::{Regex, Error as RegexError};
+use regex::{Error as RegexError, Regex};
 
 pub struct Pattern(Regex);
 

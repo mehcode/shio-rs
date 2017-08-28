@@ -5,7 +5,7 @@ use hyper;
 use futures::{future, lazy, Future};
 
 use ext::BoxFuture;
-use handler::{default_catch, BoxHandler};
+use handler::{default_catch, HandlerMut, BoxHandlerMut};
 use response::Response;
 use context::Context;
 use middleware::Middleware;
@@ -28,20 +28,31 @@ use middleware::Middleware;
 pub struct Recover;
 
 impl Middleware for Recover {
-    fn call(&self, next: BoxHandler) -> BoxHandler {
-        let next = Arc::new(next);
-        Box::new(move |ctx: Context| -> BoxFuture<Response, hyper::Error> {
-            let next = next.clone();
-            Box::new(
-                AssertUnwindSafe(lazy(move || next.call(ctx)))
-                    .catch_unwind()
-                    .then(move |result| -> BoxFuture<Response, hyper::Error> {
-                        Box::new(match result {
-                            Err(err) => future::ok(default_catch(err)),
-                            Ok(result) => future::result(result),
-                        })
-                    }),
-            )
-        })
+    fn call(&self, next: BoxHandlerMut) -> BoxHandlerMut {
+        Box::new(RecoverHandler(next))
+        // let next = Arc::new(next);
+        // Box::new(move |ctx: Context| -> BoxFuture<Response, hyper::Error> {
+        //     let next = next.clone();
+        //     Box::new(
+        //         AssertUnwindSafe(lazy(move || next.call(ctx)))
+        //             .catch_unwind()
+        //             .then(move |result| -> BoxFuture<Response, hyper::Error> {
+        //                 Box::new(match result {
+        //                     Err(err) => future::ok(default_catch(err)),
+        //                     Ok(result) => future::result(result),
+        //                 })
+        //             }),
+        //     )
+        // })
+    }
+}
+
+struct RecoverHandler(BoxHandlerMut);
+
+impl HandlerMut for RecoverHandler {
+    type Result = BoxFuture<Response, hyper::Error>;
+
+    fn call(&self, context: &mut Context) -> Self::Result {
+        self.0.call(context)
     }
 }

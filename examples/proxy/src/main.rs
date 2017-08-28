@@ -13,10 +13,10 @@ extern crate shio;
 use shio::prelude::*;
 use hyper::Client;
 
-fn proxy(ctx: Context) -> BoxFuture<Response, hyper::Error> {
+fn proxy(ctx: &Context) -> BoxFuture<Response, hyper::Error> {
     // Additional work can be scheduled on the thread-local event loop,
     // as each handler receives a reference to it
-    Client::new(&ctx)
+    Client::new(ctx)
         .get("http://www.google.com".parse().unwrap())
         // Map the _streaming_ response from google into a _streaming_
         // response from us
@@ -50,5 +50,4 @@ fn main() {
         .with(shio::middleware::Recover)
     )
 
-    */
-}
+    */}

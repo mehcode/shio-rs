@@ -4,12 +4,12 @@ use futures::Future;
 
 /// A type alias for Box<Item = T, Error = E>
 #[cfg_attr(feature = "cargo-clippy", allow(stutter))]
-pub type BoxFuture<T, E> = Box<Future<Item = T, Error = E>>;
+pub type BoxFuture<'a, T, E> = Box<Future<Item = T, Error = E> + 'a>;
 
 pub trait FutureExt: Future {
-    fn into_box(self) -> BoxFuture<Self::Item, Self::Error>
+    fn into_box<'r>(self) -> BoxFuture<'r, Self::Item, Self::Error>
     where
-        Self: Sized + 'static,
+        Self: Sized + 'r,
     {
         Box::new(self)
     }
@@ -17,9 +17,9 @@ pub trait FutureExt: Future {
 
 impl<F: Future> FutureExt for F {}
 
-pub trait IntoFutureExt<T> {
+pub trait IntoFutureExt<'r, T> {
     type Error: fmt::Debug + Send + Sync;
-    type Future: Future<Item = T, Error = Self::Error>;
+    type Future: Future<Item = T, Error = Self::Error> + 'r;
 
     fn into_future_ext(self) -> Self::Future;
 }

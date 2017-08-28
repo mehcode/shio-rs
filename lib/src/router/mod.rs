@@ -10,7 +10,7 @@ use hyper::{self, Method, StatusCode};
 use regex::{RegexSet, SetMatchesIntoIter};
 use futures::future;
 
-use handler::Handler;
+use handler::HandlerMut;
 use context::Context;
 use response::Response;
 use ext::BoxFuture;
@@ -102,11 +102,11 @@ impl Router {
     }
 }
 
-impl Handler for Router {
+impl HandlerMut for Router {
     type Result = BoxFuture<Response, hyper::Error>;
 
     #[inline]
-    fn call(&self, ctx: Context) -> Self::Result {
+    fn call(&self, ctx: &mut Context) -> Self::Result {
         let filter_results = { self.filter(ctx.method(), ctx.path()) };
         if let Some((routes, route_indexes)) = filter_results {
             for route_index in route_indexes {
@@ -116,14 +116,14 @@ impl Handler for Router {
                 //       error and continue iterating over matching routes
 
                 // Re-parse the path to pull out captures
-                if let Some(captures) = route.pattern().captures(ctx.path()) {
-                    println!("params: {:?}", captures);
-                } else {
-                    // NOTE: This shouldn't be possible to fail as we already matched against the
-                    //       path once. In the pathological case that we do fail here, stop
-                    //       trying as the universe is probably positioned weirdly.
-                    break;
-                }
+                // if let Some(captures) = route.pattern().captures(ctx.path()) {
+                //     // println!("params: {:?}", captures);
+                // } else {
+                //     // NOTE: This shouldn't be possible to fail as we already matched against the
+                //     //       path once. In the pathological case that we do fail here, stop
+                //     //       trying as the universe is probably positioned weirdly.
+                //     break;
+                // }
 
                 return route.call(ctx);
             }
@@ -179,8 +179,14 @@ mod tests {
         // FIXME: This section currently matches against regex
         //        This is an implementation detail; store the source strings and we'll
         //        match against that
-        assert_eq!(router.find(&Get, "/hello").unwrap().pattern().as_str(), "^/hello$");
-        assert_eq!(router.find(&Get, "/aa").unwrap().pattern().as_str(), "^/aa$");
+        assert_eq!(
+            router.find(&Get, "/hello").unwrap().pattern().as_str(),
+            "^/hello$"
+        );
+        assert_eq!(
+            router.find(&Get, "/aa").unwrap().pattern().as_str(),
+            "^/aa$"
+        );
     }
 
     /// Test for some match for segment parameter

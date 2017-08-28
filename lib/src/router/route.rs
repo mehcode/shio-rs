@@ -48,6 +48,11 @@ impl Route {
     pub(crate) fn pattern(&self) -> &Pattern {
         &self.pattern
     }
+
+    #[inline]
+    pub(crate) fn call(&self, ctx: &Context) -> BoxFuture<Response, hyper::Error> {
+        self.handler.call(ctx)
+    }
 }
 
 impl<P, H> From<(Method, P, H)> for Route
@@ -58,15 +63,6 @@ where
 {
     fn from(arguments: (Method, P, H)) -> Self {
         Route::new(arguments.0, arguments.1, arguments.2)
-    }
-}
-
-impl Handler for Route {
-    type Result = BoxFuture<Response, hyper::Error>;
-
-    #[inline]
-    fn call(&self, ctx: Context) -> Self::Result {
-        self.handler.call(ctx)
     }
 }
 

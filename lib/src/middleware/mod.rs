@@ -1,7 +1,7 @@
-use handler::BoxHandler;
+use handler::BoxHandlerMut;
 
 pub trait Middleware: Send + Sync {
-    fn call(&self, next: BoxHandler) -> BoxHandler;
+    fn call(&self, next: BoxHandlerMut) -> BoxHandlerMut;
 
     #[inline]
     fn into_box(self) -> BoxMiddleware
@@ -15,10 +15,10 @@ pub trait Middleware: Send + Sync {
 impl<TFn> Middleware for TFn
 where
     TFn: Send + Sync,
-    TFn: Fn(BoxHandler) -> BoxHandler,
+    TFn: Fn(BoxHandlerMut) -> BoxHandlerMut,
 {
     #[inline]
-    fn call(&self, next: BoxHandler) -> BoxHandler {
+    fn call(&self, next: BoxHandlerMut) -> BoxHandlerMut {
         (*self)(next)
     }
 }

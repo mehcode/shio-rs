@@ -1,36 +1,59 @@
 use std::sync::Arc;
 use std::fmt;
+use std::marker::PhantomData;
+use std::mem;
 
 use hyper;
 
 use response::Response;
 use context::Context;
-use handler::Handler;
+use handler::{BoxHandlerMut, HandlerMut};
 use middleware::{self, BoxMiddleware, Middleware};
 use router::Router;
 use ext::{BoxFuture, IntoFutureExt};
 
-pub struct Stack<H: Handler + 'static>
+pub struct Stack<H: HandlerMut + 'static>
 where
     <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
 {
-    pub(crate) handler: Arc<H>,
-    middlewares: Vec<BoxMiddleware>,
+    handler: Option<BoxHandlerMut>,
+    handler_ptr: *const H,
+    phantom: PhantomData<H>,
 }
 
-impl<H: Handler + 'static> Stack<H>
+unsafe impl<H: HandlerMut + 'static> Send for Stack<H>
+where
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync
+{
+}
+
+unsafe impl<H: HandlerMut + 'static> Sync for Stack<H>
+where
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync
+{
+}
+
+impl<H: HandlerMut + 'static> Stack<H>
 where
     <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
 {
     pub fn new(handler: H) -> Self {
+        let handler = Box::new(::handler::BoxedHandlerMut(handler));
+        let handler_ptr: *const *const H = unsafe { mem::transmute(&handler) };
+
         Stack {
-            handler: Arc::new(handler),
-            middlewares: Vec::new(),
+            handler: Some(handler),
+            handler_ptr: unsafe { *handler_ptr },
+            phantom: PhantomData,
         }
     }
 
+    pub(crate) fn handler(&mut self) -> &mut H {
+        unsafe { mem::transmute(self.handler_ptr) }
+    }
+
     pub(crate) fn add<T: Middleware + 'static>(&mut self, middleware: T) {
-        self.middlewares.push(middleware.into_box());
+        self.handler = Some(middleware.call(self.handler.take().unwrap()));
     }
 
     pub fn with<T: Middleware + 'static>(mut self, middleware: T) -> Self {
@@ -39,25 +62,15 @@ where
     }
 }
 
-impl<H: Handler + 'static> Handler for Stack<H>
+impl<H: HandlerMut + 'static> HandlerMut for Stack<H>
 where
     <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
 {
     type Result = BoxFuture<Response, hyper::Error>;
 
     #[inline]
-    fn call(&self, ctx: Context) -> Self::Result {
-        // Define the initial 'next' fn that simply calls the handler
-        let handler = self.handler.clone();
-        let mut next = (move |ctx: Context| handler.call(ctx)).into_box();
-
-        // Iterate backwards through our stack to produce a forwards chain of 'next' fns
-        for middleware in self.middlewares.iter().rev() {
-            next = middleware.call(next);
-        }
-
-        // Kick off
-        next.call(ctx)
+    fn call(&self, ctx: &mut Context) -> Self::Result {
+        self.handler.as_ref().unwrap().call(ctx)
     }
 }
 

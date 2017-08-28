@@ -5,13 +5,13 @@ use std::time::Instant;
 use shio::Stack;
 use shio::prelude::*;
 
-fn hello(_: Context) -> Response {
+fn hello(_: &Context) -> Response {
     Response::with("Hello World!\n")
 }
 
 // Measures request time in μs and prints it out
-fn timeit(next: BoxHandler) -> BoxHandler {
-    (move |ctx: Context| {
+fn timeit(next: BoxHandlerMut) -> BoxHandlerMut {
+    (move |ctx: &mut Context| {
         let time_before = Instant::now();
 
         next.call(ctx)

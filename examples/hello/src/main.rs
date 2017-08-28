@@ -3,7 +3,7 @@ extern crate shio;
 use shio::prelude::*;
 
 // Simple requests should be simple, even in the face of asynchronous design.
-fn hello_world(_: Context) -> &'static str {
+fn hello_world(_: &Context) -> &'static str {
     // Handlers may return a value that implements `Responder`
     // &str implements `Responder` and sets both the body and the `Content-Length` header
     "Hello World!\n"
@@ -21,7 +21,7 @@ fn hello_world(_: Context) -> &'static str {
     // The default status code is `Status::Ok` (200).
 }
 
-fn hello(_: Context) -> String {
+fn hello(_: &Context) -> String {
     // ?!
 
     format!("Hello, {}!", "George")
