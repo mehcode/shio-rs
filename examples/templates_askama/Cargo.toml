@@ -5,8 +5,11 @@ workspace = "../.."
 
 [dependencies]
 shio = { path = "../../lib" }
-askama = "0.3.4"
-hyper = "0.11"
+askama = { git = "https://github.com/mehcode/askama", features = ["with-shio"] }
 
 [build-dependencies]
-askama = "0.3.4"
+askama = { git = "https://github.com/mehcode/askama", features = ["with-shio"] }
+
+[replace]
+"askama_derive:0.3.4" = { git = "https://github.com/mehcode/askama" }
+"askama_shared:0.3.4" = { git = "https://github.com/mehcode/askama" }
