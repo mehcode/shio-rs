@@ -1,3 +1,4 @@
+use std::ops::Index;
 use std::sync::Arc;
 use std::collections::HashMap;
 
@@ -37,4 +38,32 @@ impl Parameters {
 
 impl Key for Parameters {
     type Value = Self;
+}
+
+impl Index<usize> for Parameters {
+    type Output = str;
+
+    /// Get a parameter by index.
+    ///
+    /// # Panics
+    ///
+    /// If there is no parameter at the given index.
+    fn index(&self, index: usize) -> &Self::Output {
+        self.get(index)
+            .unwrap_or_else(|| panic!("no parameter at index '{}'", index))
+    }
+}
+
+impl<'b> Index<&'b str> for Parameters {
+    type Output = str;
+
+    /// Get a parameter by name.
+    ///
+    /// # Panics
+    ///
+    /// If there is no parameter named by the given value.
+    fn index<'a>(&'a self, name: &str) -> &'a str {
+        self.name(name)
+            .unwrap_or_else(|| panic!("no parameter named '{}'", name))
+    }
 }

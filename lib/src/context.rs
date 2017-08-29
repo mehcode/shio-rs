@@ -46,7 +46,16 @@ impl Context {
     }
 
     /// Gets a value from the request context.
-    pub fn get<K: Key>(&self) -> Option<&K::Value> {
+    ///
+    /// # Panics
+    ///
+    /// If there is no value in the request context of the given type.
+    pub fn get<K: Key>(&self) -> &K::Value {
+        self.state.get::<K>().unwrap()
+    }
+
+    /// Gets a value from the request context.
+    pub fn try_get<K: Key>(&self) -> Option<&K::Value> {
         self.state.get::<K>()
     }
 }
