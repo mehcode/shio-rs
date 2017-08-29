@@ -39,43 +39,6 @@ fn main() {
 
 ## Examples
 
-### [Proxy Request](examples/proxy/src/main.rs)
-
-Handlers may return a value that implements `Responder` or a `BoxFuture<T, E>`
-where `T` implements `Responder`.
-
-For some concrete examples, you may return
-a `String`, a `BoxFuture<StatusCode, _>`,
-a `&'static str`, or a `BoxFuture<Response, _>`. `Responder` is implemented
-for many other primitive types and is meant to serve as an integration point
-for external crates like [Askama](https://github.com/djc/askama).
-
-```rust
-extern crate hyper;
-extern crate shio;
-
-use shio::prelude::*;
-use hyper::Client;
-
-fn proxy(ctx: Context) -> BoxFuture<Response, hyper::Error> {
-    // Additional work can be scheduled on the thread-local event loop,
-    // as each handler receives a reference to it
-    Client::new(&ctx)
-        .get("http://www.google.com".parse().unwrap())
-        // Map the _streaming_ response from google into a _streaming_
-        // response from us
-        .map(|res| Response::build().body(res.body()))
-        // Use `.into_box` to turn this future stream into a `BoxFuture`
-        // that can be easily returned on stable Rust.
-        //
-        // When `impl Trait` becomes available on stable Rust, this
-        // necessity will go away
-        .into_box()
-}
-
-// fn main omitted [...]
-```
-
 ### [Stateful](examples/state/src/main.rs)
 
 Handlers are **not** cloned on each request and therefore may contain state.
