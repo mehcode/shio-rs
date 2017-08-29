@@ -63,7 +63,7 @@ fn index4(_: Context) -> Result<Response> {
 // A `.into_box` trait method is implemented for all futures to assist with
 // wrapping the future in a box
 fn index5(ctx: Context) -> BoxFuture<Response, Error> {
-    Timeout::new(Duration::from_secs(2), &ctx)
+    Timeout::new(Duration::from_secs(2), ctx.handle())
         // `Timeout::new` returns a `Result<{Future}, io::Error>`
         // `.into_future` turns a `Result<T, E>` into a `{Future<Item = T, Error = E>}`
         .into_future()
@@ -80,7 +80,7 @@ fn index5(ctx: Context) -> BoxFuture<Response, Error> {
 
 // When returning a _future_ you may also return a {Responder} directly
 fn index6(ctx: Context) -> BoxFuture<&'static str, Error> {
-    Timeout::new(Duration::from_secs(2), &ctx)
+    Timeout::new(Duration::from_secs(2), ctx.handle())
         .into_future()
         .from_err()
         .map(|_| PHRASE)

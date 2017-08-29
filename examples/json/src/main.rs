@@ -25,7 +25,7 @@ struct ResponseBody {
 fn index(ctx: Context) -> BoxFuture<Response, Box<Error + Send + Sync>> {
     // `tokio_io::io::read_to_end` will asynchronously read the request body, to completion,
     // and place it in the new vector.
-    io::read_to_end(ctx, Vec::new())
+    io::read_to_end(ctx.body(), Vec::new())
         // `Future::from_err` acts like `?` in that it coerces the error type from
         // the future into the final error type
         .from_err()
