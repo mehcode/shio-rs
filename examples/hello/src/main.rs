@@ -22,10 +22,11 @@ fn hello_world(_: Context) -> &'static str {
 }
 
 fn hello(ctx: Context) -> String {
-    format!(
-        "Hello, {}!",
-        ctx.get::<Parameters>().unwrap().name("name").unwrap()
-    )
+    // Handlers have access to a type map which is a HashMap where the keys are types.
+    //
+    // With the default router, an instance of `Parameters` is present in this type map
+    // that provides access to our route parameters.
+    format!("Hello, {}!", &ctx.get::<Parameters>()["name"])
 }
 
 fn main() {
@@ -47,7 +48,8 @@ fn main() {
 
     let mut router = shio::router::Router::new();
 
-    router.route((Method::Get, "/", index));
+    router.route((Method::Get, "/", hello_world));
+    router.route((Method::Get, "/{name}", hello));
 
     let mut service = Shio::new(router);
 
