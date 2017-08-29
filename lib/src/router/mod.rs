@@ -1,13 +1,15 @@
 mod route;
 mod pattern;
+mod parameters;
 
-pub use router::route::Route;
-pub use router::pattern::Pattern;
+pub use self::route::Route;
+pub use self::pattern::Pattern;
+pub use self::parameters::Parameters;
 
 use std::collections::HashMap;
 
 use hyper::{self, Method, StatusCode};
-use regex::{RegexSet, SetMatchesIntoIter};
+use regex::RegexSet;
 use futures::future;
 
 use handler::Handler;
@@ -86,19 +88,12 @@ impl Router {
     }
 
     pub fn find(&self, method: &Method, uri: &str) -> Option<&Route> {
-        let (routes, mut route_indexes) = try_opt!(self.filter(method, uri));
-        let index = try_opt!(route_indexes.next());
-
-        Some(&routes[index])
-    }
-
-    pub fn filter(&self, method: &Method, uri: &str) -> Option<(&[Route], SetMatchesIntoIter)> {
-        // Pull out the patterns and routes for this method
         let routes = try_opt!(self.routes.get(method));
         let route_patterns = try_opt!(self.route_patterns.get(method));
 
-        // Get the first match and return it
-        Some((&routes, route_patterns.matches(uri).into_iter()))
+        let route_index = try_opt!(route_patterns.matches(uri).into_iter().next());
+
+        Some(&routes[route_index])
     }
 }
 
@@ -106,30 +101,23 @@ impl Handler for Router {
     type Result = BoxFuture<Response, hyper::Error>;
 
     #[inline]
-    fn call(&self, ctx: Context) -> Self::Result {
-        let filter_results = { self.filter(ctx.method(), ctx.path()) };
-        if let Some((routes, route_indexes)) = filter_results {
-            for route_index in route_indexes {
-                let route = &routes[route_index];
-
-                // TODO: The idea here is to eventually determine if there was a _parameter parse_
-                //       error and continue iterating over matching routes
-
-                // Re-parse the path to pull out captures
-                if let Some(captures) = route.pattern().captures(ctx.path()) {
-                } else {
-                    // NOTE: This shouldn't be possible to fail as we already matched against the
-                    //       path once. In the pathological case that we do fail here, stop
-                    //       trying as the universe is probably positioned weirdly.
-                    break;
-                }
-
-                return route.call(ctx);
+    fn call(&self, mut ctx: Context) -> Self::Result {
+        // let route = self.find(ctx.method(), ctx.path());
+        if let Some(route) = self.find(ctx.method(), ctx.path()) {
+            // Re-parse the path to pull out captures
+            if let Some(parameters) = route.pattern().parameters(ctx.path()) {
+                // Add the parameters to the request context
+                ctx.put::<Parameters>(parameters);
+            } else {
+                // NOTE: This shouldn't be possible to fail as we already matched against the
+                //       path once.
             }
-        }
 
-        // Return 404 if we failed to find a matching route
-        Box::new(future::ok(Response::with(StatusCode::NotFound)))
+            route.call(ctx)
+        } else {
+            // Return 404 if we failed to find a matching route
+            Box::new(future::ok(Response::with(StatusCode::NotFound)))
+        }
     }
 }
 

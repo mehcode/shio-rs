@@ -1,8 +1,7 @@
 use std::ops::Deref;
-use std::io::{self, Read, Write};
 
-use hyper;
 use tokio_core::reactor::Handle;
+use typemap::{TypeMap, Key};
 
 use request::{Body, Request};
 
@@ -16,13 +15,14 @@ use request::{Body, Request};
 /// [`Handle`]: https://docs.rs/tokio-core/0.1/tokio_core/reactor/struct.Handle.html
 /// [`Request`]: ../request/struct.Request.html
 pub struct Context {
+    state: TypeMap,
     handle: Handle,
     request: Request,
 }
 
 impl Context {
     pub(crate) fn new(handle: Handle, request: Request) -> Self {
-        Context { handle, request }
+        Context { handle, request, state: TypeMap::new() }
     }
 
     /// Return a reference to a handle to the event loop this `Context` is associated with.
@@ -34,6 +34,16 @@ impl Context {
     /// Take the request body.
     pub fn body(self) -> Body {
         self.request.body()
+    }
+
+    /// Puts a value into the request context.
+    pub fn put<K: Key>(&mut self, value: K::Value) {
+        self.state.insert::<K>(value);
+    }
+
+    /// Gets a value from the request context.
+    pub fn get<K: Key>(&self) -> Option<&K::Value> {
+        self.state.get::<K>()
     }
 }
 

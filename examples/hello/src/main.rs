@@ -21,10 +21,9 @@ fn hello_world(_: Context) -> &'static str {
     // The default status code is `Status::Ok` (200).
 }
 
-fn hello(_: Context) -> String {
-    // ?!
-
-    format!("Hello, {}!", "George")
+fn hello(ctx: Context) -> String {
+    // FIXME: Use `?`
+    format!("Hello, {}!", ctx.get::<Parameters>().unwrap().name("name").unwrap())
 }
 
 fn main() {

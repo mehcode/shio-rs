@@ -1,15 +1,43 @@
 use std::ops::Deref;
 use std::str::FromStr;
+use std::sync::Arc;
+use std::collections::HashMap;
 
 use regex::{Regex, Error as RegexError};
 
-pub struct Pattern(Regex);
+use super::Parameters;
+
+pub struct Pattern {
+    re: Regex,
+    names: Arc<HashMap<String, usize>>,
+}
+
+impl Pattern {
+    pub(crate) fn new(re: Regex) -> Self {
+        let names = re
+            .capture_names()
+            .enumerate()
+            .filter_map(|(i, name)| name.map(|name| (name.to_owned(), i)))
+            .collect();
+
+        Pattern { re, names: Arc::new(names) }
+    }
+
+    pub(crate) fn parameters(&self, text: &str) -> Option<Parameters> {
+        let captures = match self.re.captures(text) {
+            Some(captures) => captures,
+            None => { return None }
+        };
+
+        Some(Parameters::new(self.names.clone(), text, captures))
+    }
+}
 
 impl Deref for Pattern {
     type Target = Regex;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.re
     }
 }
 
@@ -17,7 +45,7 @@ impl FromStr for Pattern {
     type Err = RegexError;
 
     fn from_str(pattern: &str) -> Result<Self, Self::Err> {
-        Ok(Pattern(Regex::new(&parse(pattern))?))
+        Ok(Pattern::new(Regex::new(&parse(pattern))?))
     }
 }
 
@@ -32,7 +60,7 @@ impl<'a> From<&'a str> for Pattern {
 
 impl From<Regex> for Pattern {
     fn from(val: Regex) -> Self {
-        Pattern(val)
+        Pattern::new(val)
     }
 }
 
