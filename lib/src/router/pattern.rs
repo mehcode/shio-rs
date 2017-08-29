@@ -67,10 +67,13 @@ impl From<Regex> for Pattern {
 }
 
 fn parse(pattern: &str) -> String {
+    const DEFAULT_PATTERN: &'static str = "[^/]+";
+
     let mut re = String::from("^/");
     let mut in_param = false;
+    let mut in_param_pattern = false;
     let mut param_name = String::new();
-    let mut params = Vec::new();
+    let mut param_pattern = String::from(DEFAULT_PATTERN);
 
     for (index, ch) in pattern.chars().enumerate() {
         // All routes must have a leading slash so its optional to have one
@@ -81,17 +84,29 @@ fn parse(pattern: &str) -> String {
         if in_param {
             // In parameter segment: `{....}`
             if ch == '}' {
-                // Exit the parameter segment
-                re.push_str(&format!(r"(?P<{}>[^/]+)", &param_name));
-                params.push(param_name.clone());
+                re.push_str(&format!(r"(?P<{}>{})", &param_name, &param_pattern));
+
+                param_name.clear();
+                param_pattern = String::from(DEFAULT_PATTERN);
+
+                in_param_pattern = false;
                 in_param = false;
+            } else if ch == ':' {
+                // The parameter name has been determined; now we are in custom
+                // pattern land
+                in_param_pattern = true;
+                param_pattern.clear();
+            } else if in_param_pattern {
+                // Ignore leading whitespace for pattern
+                if !(ch == ' ' && param_pattern.len() == 0) {
+                    param_pattern.push(ch);
+                }
             } else {
                 param_name.push(ch);
             }
         } else if ch == '{' {
             // Enter a parameter segment
             in_param = true;
-            param_name.clear();
         } else {
             re.push(ch);
         }

@@ -123,9 +123,12 @@ impl Handler for Router {
 
 #[cfg(test)]
 mod tests {
-    use super::Router;
+    use tokio_core::reactor::Core;
+    use hyper;
+
+    use super::{Parameters, Router};
+    use {Context, Handler, Request};
     use Method::*;
-    use Context;
 
     // Empty handler to use for route tests
     fn empty_handler(_: Context) {}
@@ -186,5 +189,65 @@ mod tests {
         assert!(router.find(&Get, "/user/profile").is_some());
         assert!(router.find(&Get, "/user/3289").is_some());
         assert!(router.find(&Get, "/user").is_none());
+    }
+
+    /// Test for segment parameter value
+    #[test]
+    fn test_param_get_value() {
+        let mut router = Router::new();
+        router.add((Get, "/user/{id}", |context: Context| {
+            // FIXME: We should have an assert that we got here
+            assert_eq!(&context.get::<Parameters>()["id"], "3289");
+        }));
+
+        let mut core = Core::new().unwrap();
+
+        // TODO: It should much easier to make a test context
+        //       Perhaps `Request::build ( .. )` should be a thing?
+        //       Proxied as `Context::build ( .. )` ?
+        let request = Request::new(
+            hyper::Request::new(Get, "/user/3289".parse().unwrap()).deconstruct(),
+        );
+        let context = Context::new(core.handle(), request);
+
+        let work = router.call(context);
+
+        core.run(work).unwrap();
+    }
+
+    /// Test for some match for a custom parameter
+    #[test]
+    fn test_param_custom_get() {
+        let mut router = Router::new();
+        router.add((Get, "/static/{file: .+}", empty_handler));
+
+        assert!(router.find(&Get, "/static").is_none());
+        assert!(router.find(&Get, "/static/").is_none());
+        assert!(router.find(&Get, "/static/blah").is_some());
+        assert!(router.find(&Get, "/static/rahrahrah").is_some());
+    }
+
+    /// Test for segment parameter value
+    #[test]
+    fn test_param_get_custom() {
+        let mut router = Router::new();
+        router.add((Get, "/static/{filename: .*}", |context: Context| {
+            // FIXME: We should have an assert that we got here
+            assert_eq!(
+                &context.get::<Parameters>()["filename"],
+                "path/to/file/is/here"
+            );
+        }));
+
+        let mut core = Core::new().unwrap();
+
+        let request = Request::new(
+            hyper::Request::new(Get, "/static/path/to/file/is/here".parse().unwrap()).deconstruct(),
+        );
+        let context = Context::new(core.handle(), request);
+
+        let work = router.call(context);
+
+        core.run(work).unwrap();
     }
 }
