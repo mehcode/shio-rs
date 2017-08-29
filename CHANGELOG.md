@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.0.8] - 2017-08-29
+### Changed
+  - Remove `Sync` requirement for handler errors.
+
 ## [0.0.7] - 2017-08-29
 ### Added
   - Implement `Responder` for `()` ( returns a `204` response )
@@ -104,7 +108,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Asynchronous `Handler` that can be a simple function.
   - Service for `tokio` that is a multithreaded abstraction over `Handler`.
 
-[Unreleased]: ../../compare/v0.0.7...HEAD
+[Unreleased]: ../../compare/v0.0.8...HEAD
+[0.0.8]: ../../compare/v0.0.8...v0.0.7
 [0.0.7]: ../../compare/v0.0.7...v0.0.6
 [0.0.6]: ../../compare/v0.0.5...v0.0.6
 [0.0.5]: ../../compare/v0.0.4...v0.0.5
