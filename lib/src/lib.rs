@@ -17,10 +17,8 @@ extern crate typemap;
 mod context;
 mod handler;
 mod shio;
-mod stack;
 mod service;
 pub mod ext;
-pub mod middleware;
 pub mod response;
 pub mod request;
 pub mod errors;
@@ -32,16 +30,13 @@ pub use response::Response;
 pub use request::Request;
 pub use shio::Shio;
 pub use context::Context;
-pub use handler::{BoxHandler, Handler};
-pub use middleware::Middleware;
-pub use stack::Stack;
+pub use handler::Handler;
 
 /// Re-exports important traits and types. Meant to be glob imported when using Shio.
 pub mod prelude {
-    pub use super::{header, BoxHandler, Context, Handler, Method, Request, Response, Shio,
-                    StatusCode};
+    pub use super::{header, Context, Method, Request, Response, Shio, StatusCode};
     pub use super::router::Parameters;
 
     pub use futures::{Future, IntoFuture};
-    pub use ext::{BoxFuture, FutureExt, IntoFutureExt};
+    pub use ext::{BoxFuture, FutureExt};
 }
