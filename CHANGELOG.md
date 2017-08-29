@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.0.7] - 2017-08-29
 ### Added
   - Implement `Responder` for `()` ( returns a `204` response )
   - Add support for route parameters. Parameters may be declared in a route with a `{name}` syntax (e.g. `/user/{id}`).
@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Removed
   - Removed `Middleware` and `Stack`. `middleware::Recover` was moved inside (e.g. still here but no longer an optional middleware).
 
-    Shio will have middleware in the near future. Perhaps before this version is released. I'm only removing the interface to help refocus on what's remaining and to take a fresh attempt at implementation.
+    Shio will have middleware in the near future. I'm only removing the interface to help refocus on what's remaining and to take a fresh attempt at implementation.
 
 ### Deprecated
   - Renamed `Router::route` to `Router::add`. `Router::route` is now deprecated.
@@ -104,7 +104,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Asynchronous `Handler` that can be a simple function.
   - Service for `tokio` that is a multithreaded abstraction over `Handler`.
 
-[Unreleased]: ../../compare/v0.0.6...HEAD
+[Unreleased]: ../../compare/v0.0.7...HEAD
+[0.0.7]: ../../compare/v0.0.7...v0.0.6
 [0.0.6]: ../../compare/v0.0.5...v0.0.6
 [0.0.5]: ../../compare/v0.0.4...v0.0.5
 [0.0.4]: ../../compare/v0.0.3...v0.0.4
