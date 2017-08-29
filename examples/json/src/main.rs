@@ -4,11 +4,22 @@ extern crate shio;
 extern crate tokio_io;
 
 #[macro_use]
+extern crate error_chain;
+
+#[macro_use]
 extern crate serde_derive;
 
-use std::error::Error;
 use tokio_io::io;
 use shio::prelude::*;
+
+mod errors {
+    error_chain! {
+        foreign_links {
+            Io(::std::io::Error);
+            Json(::serde_json::Error);
+        }
+    }
+}
 
 #[derive(Debug, Deserialize)]
 struct RequestBody {
@@ -22,7 +33,7 @@ struct ResponseBody {
     name: String,
 }
 
-fn index(ctx: Context) -> BoxFuture<Response, Box<Error + Send + Sync>> {
+fn index(ctx: Context) -> BoxFuture<Response, errors::Error> {
     // `tokio_io::io::read_to_end` will asynchronously read the request body, to completion,
     // and place it in the new vector.
     io::read_to_end(ctx.body(), Vec::new())
@@ -33,7 +44,7 @@ fn index(ctx: Context) -> BoxFuture<Response, Box<Error + Send + Sync>> {
         // synchronous workflow
         //
         // `read_to_end` resolves to a tuple of our reader ( `Context` ) and the buffer.
-        .and_then(|(_, buffer)| /* -> Result<Response, Box<Error + Send + Sync>> */ {
+        .and_then(|(_, buffer)| /* -> errors::Result<Response> */ {
             let body: RequestBody = serde_json::from_slice(&buffer)?;
             let s = serde_json::to_string(&ResponseBody { id: 20, name: body.name })?;
 
