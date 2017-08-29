@@ -30,7 +30,7 @@ impl Route {
     where
         P: Into<Pattern>,
         H: Handler + 'static,
-        <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
+        <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
     {
         Route {
             handler: handler.into_box(),
@@ -59,7 +59,7 @@ impl<P, H> From<(Method, P, H)> for Route
 where
     P: Into<Pattern>,
     H: Handler + 'static,
-    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
 {
     fn from(arguments: (Method, P, H)) -> Self {
         Route::new(arguments.0, arguments.1, arguments.2)

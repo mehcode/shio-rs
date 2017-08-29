@@ -27,7 +27,7 @@ pub(crate) fn default_catch<E: fmt::Debug + Send>(err: E) -> Response {
 
 pub trait Handler: Send + Sync
 where
-    <Self::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
+    <Self::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
 {
     type Result: IntoFutureExt<Response>;
 
@@ -52,7 +52,7 @@ pub type BoxHandler = Box<Handler<Result = BoxFuture<Response, hyper::Error>>>;
 
 impl<TError, TFuture, TFn> Handler for TFn
 where
-    TError: fmt::Debug + Send + Sync,
+    TError: fmt::Debug + Send,
     TFuture: IntoFutureExt<Response, Error = TError>,
     TFn: Send + Sync,
     TFn: Fn(Context) -> TFuture,

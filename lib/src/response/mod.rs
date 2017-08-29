@@ -31,7 +31,7 @@ impl Response {
 
     pub fn with<R: Responder>(responder: R) -> R::Result
     where
-        <R::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
+        <R::Result as IntoFuture>::Error: fmt::Debug + Send + 'static,
     {
         responder.to_response()
     }

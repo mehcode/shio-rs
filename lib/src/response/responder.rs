@@ -11,7 +11,7 @@ use handler::default_catch;
 
 pub trait Responder
 where
-    <Self::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
+    <Self::Result as IntoFuture>::Error: fmt::Debug + Send + 'static,
 {
     type Result: IntoFuture<Item = Response>;
 
@@ -58,7 +58,7 @@ impl Responder for StatusCode {
 
 impl<R: Responder> Responder for (StatusCode, R)
 where
-    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
+    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + 'static,
     <<R as Responder>::Result as IntoFuture>::Future: 'static,
 {
     type Result = BoxFuture<<R::Result as IntoFuture>::Item, <R::Result as IntoFuture>::Error>;
@@ -88,9 +88,9 @@ impl Responder for Response {
 
 impl<E, R> Responder for Box<Future<Item = R, Error = E>>
 where
-    E: fmt::Debug + Send + Sync + 'static,
+    E: fmt::Debug + Send + 'static,
     R: Responder + 'static,
-    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
+    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + 'static,
     <<R as Responder>::Result as IntoFuture>::Future: 'static,
 {
     type Result = Box<Future<Item = Response, Error = hyper::Error>>;
@@ -110,7 +110,7 @@ where
 
 impl<R: Responder + 'static> IntoFutureExt<Response> for R
 where
-    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + Sync,
+    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send,
 {
     type Error = <R::Result as IntoFuture>::Error;
     type Future = <R::Result as IntoFuture>::Future;
@@ -123,9 +123,9 @@ where
 #[cfg(not(feature = "nightly"))]
 impl<E, R> Responder for Result<R, E>
 where
-    E: fmt::Debug + Send + Sync + 'static,
+    E: fmt::Debug + Send + 'static,
     R: Responder + 'static,
-    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
+    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + 'static,
     <<R as Responder>::Result as IntoFuture>::Future: 'static,
 {
     type Result = BoxFuture<<R::Result as IntoFuture>::Item, hyper::Error>;
@@ -146,9 +146,9 @@ where
 #[cfg(feature = "nightly")]
 impl<E, R> Responder for Result<R, E>
 where
-    E: fmt::Debug + Send + Sync + 'static,
+    E: fmt::Debug + Send + 'static,
     R: Responder + 'static,
-    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
+    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + 'static,
     <<R as Responder>::Result as IntoFuture>::Future: 'static,
 {
     type Error = hyper::Error;
@@ -170,9 +170,9 @@ where
 #[cfg(feature = "nightly")]
 impl<E, R> Responder for Result<R, E>
 where
-    E: Responder + fmt::Debug + Send + Sync + 'static,
+    E: Responder + fmt::Debug + Send + 'static,
     R: Responder + 'static,
-    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
+    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send + 'static,
     <<R as Responder>::Result as IntoFuture>::Future: 'static,
 {
     #[inline]
@@ -204,7 +204,7 @@ mod tests {
 
     fn to_response<R: Responder>(r: R) -> Response
     where
-        <R::Result as IntoFuture>::Error: fmt::Debug + Send + Sync + 'static,
+        <R::Result as IntoFuture>::Error: fmt::Debug + Send + 'static,
     {
         Core::new()
             .unwrap()

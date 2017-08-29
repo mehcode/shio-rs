@@ -22,7 +22,7 @@ use service::Service;
 
 pub struct Shio<H: Handler + 'static>
 where
-    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
 {
     handler: Arc<H>,
     threads: usize,
@@ -30,7 +30,7 @@ where
 
 impl<H: Handler> Shio<H>
 where
-    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
 {
     pub fn new(handler: H) -> Self {
         Shio {

@@ -18,7 +18,7 @@ use ext::{BoxFuture, IntoFutureExt};
 // #[derive(Clone)]
 pub(crate) struct Service<H: Handler + 'static>
 where
-    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
 {
     handler: Arc<H>,
     handle: Handle,
@@ -26,7 +26,7 @@ where
 
 impl<H: Handler + 'static> Service<H>
 where
-    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
 {
     pub(crate) fn new(handler: Arc<H>, handle: Handle) -> Self {
         Service { handler, handle }
@@ -35,7 +35,7 @@ where
 
 impl<H: Handler + 'static> Clone for Service<H>
 where
-    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
 {
     fn clone(&self) -> Self {
         Service {
@@ -47,7 +47,7 @@ where
 
 impl<H: Handler + 'static> hyper::server::Service for Service<H>
 where
-    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send + Sync,
+    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
 {
     type Request = hyper::Request;
     type Response = hyper::Response;
