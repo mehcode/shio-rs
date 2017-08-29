@@ -1,7 +1,8 @@
 use std::ops::Deref;
 
 use tokio_core::reactor::Handle;
-use typemap::{Key, TypeMap};
+use typemap::TypeMap;
+pub use typemap::Key;
 
 use request::{Body, Request};
 

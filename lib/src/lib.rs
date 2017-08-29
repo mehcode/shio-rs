@@ -14,7 +14,7 @@ extern crate tokio_core;
 extern crate tokio_io;
 extern crate typemap;
 
-mod context;
+pub mod context;
 mod handler;
 mod shio;
 mod service;
