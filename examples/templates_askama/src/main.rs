@@ -24,7 +24,9 @@ impl shio::response::Responder for HelloTemplate {
 }
 
 fn hello(ctx: Context) -> HelloTemplate {
-    HelloTemplate { name: ctx.get::<Parameters>()["name"].into() }
+    HelloTemplate {
+        name: ctx.get::<Parameters>()["name"].into(),
+    }
 }
 
 fn main() {
