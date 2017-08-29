@@ -5,6 +5,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+  - Implement `Responder` for `()` ( returns a `204` response )
+  - Add support for route parameters. Parameters may be declared in a route with a `{name}` syntax (e.g. `/user/{id}`).
+
+### Changed
+  - Lift `Responder::Error`. It's no longer required to declare this as an associated type of a `Responder` implementation.
+
+### Removed
+  - Removed `Middleware` and `Stack`. `middleware::Recover` was moved inside (e.g. still here but no longer an optional middleware).
+
+    Shio will have middleware in the near future. Perhaps before this version is released. I'm only removing the interface to help refocus on what's remaining and to take a fresh attempt at implementation.
+
+### Deprecated
+  - Renamed `Router::route` to `Router::add`. `Router::route` is now deprecated.
 
 ## [0.0.6] - 2017-08-24
 ### Added
