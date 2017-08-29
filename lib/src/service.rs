@@ -5,6 +5,7 @@ use hyper;
 use tokio_core::reactor::Handle;
 use futures::Future;
 
+use request::Request;
 use response::Response;
 use handler::{default_catch, Handler};
 use context::Context;
@@ -53,7 +54,8 @@ where
     type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, request: Self::Request) -> Self::Future {
-        let ctx = Context::new(request, self.handle.clone());
+        let request = Request::new(request.deconstruct());
+        let ctx = Context::new(self.handle.clone(), request);
 
         Box::new(
             self.handler
