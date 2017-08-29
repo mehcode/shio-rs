@@ -11,4 +11,5 @@ members = [
   "examples/responder",
   "examples/redirect",
   "examples/templates_askama",
+  "examples/postgres",
 ]

@@ -87,6 +87,7 @@ Many more usage [examples/](https://github.com/mehcode/shio-rs/tree/master/examp
 
   - [Render templates](examples/templates_askama/src/main.rs) with [Askama](https://github.com/djc/askama)
   - [Stream a HTTP request](examples/proxy/src/main.rs) with [Hyper](https://github.com/hyperium/hyper)
+  - [Postgres](examples/postgres/src/main.rs) with [tokio-postgres](https://github.com/sfackler/rust-postgres)
 
 Examples may be ran with `cargo run -p <example name>`.
 For instance, to run the `hello` example, use:
