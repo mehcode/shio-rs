@@ -6,7 +6,7 @@ use hyper;
 use response::Response;
 use context::Context;
 use handler::Handler;
-use middleware::{self, BoxMiddleware, Middleware};
+use middleware::{BoxMiddleware, Middleware};
 use router::Router;
 use ext::{BoxFuture, IntoFutureExt};
 
@@ -63,6 +63,6 @@ where
 
 impl Default for Stack<Router> {
     fn default() -> Self {
-        Stack::new(Router::new()).with(middleware::Recover)
+        Stack::new(Router::new())
     }
 }

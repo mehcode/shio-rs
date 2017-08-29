@@ -1,15 +1,16 @@
 use std::sync::Arc;
 use std::fmt;
+use std::panic::AssertUnwindSafe;
 
 use hyper;
 use tokio_core::reactor::Handle;
-use futures::Future;
+use futures::{future, Future};
 
 use request::Request;
 use response::Response;
 use handler::{default_catch, Handler};
 use context::Context;
-use ext::IntoFutureExt;
+use ext::{BoxFuture, IntoFutureExt};
 
 // FIXME: Why does #[derive(Clone)] not work here? This _seems_ like a implementation that
 //        should be auto-derived.
@@ -56,13 +57,20 @@ where
     fn call(&self, request: Self::Request) -> Self::Future {
         let request = Request::new(request.deconstruct());
         let ctx = Context::new(self.handle.clone(), request);
+        let handler = self.handler.clone();
 
         Box::new(
-            self.handler
-                .call(ctx)
-                .into_future_ext()
-                .or_else(default_catch)
-                .map(Response::into_hyper_response),
+            AssertUnwindSafe(future::lazy(move || handler.call(ctx).into_future_ext()))
+                .catch_unwind()
+                .then(|result| -> BoxFuture<hyper::Response, hyper::Error> {
+                    Box::new(future::ok(
+                        (match result {
+                            Err(err) => default_catch(err),
+                            Ok(Err(err)) => default_catch(err),
+                            Ok(Ok(response)) => response,
+                        }).into_hyper_response(),
+                    ))
+                }),
         )
     }
 }
