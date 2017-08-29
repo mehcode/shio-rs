@@ -3,7 +3,6 @@
 #![cfg_attr(feature = "cargo-clippy", allow(missing_docs_in_private_items))]
 
 extern crate bytes;
-extern crate typemap;
 extern crate futures;
 extern crate hyper;
 #[macro_use]
@@ -13,6 +12,7 @@ extern crate num_cpus;
 extern crate regex;
 extern crate tokio_core;
 extern crate tokio_io;
+extern crate typemap;
 
 mod context;
 mod handler;
@@ -38,8 +38,9 @@ pub use stack::Stack;
 
 /// Re-exports important traits and types. Meant to be glob imported when using Shio.
 pub mod prelude {
-    pub use super::{header, BoxHandler, Context, Handler, Method, Request, Response, Shio, StatusCode};
-    pub use super::router::{Parameters};
+    pub use super::{header, BoxHandler, Context, Handler, Method, Request, Response, Shio,
+                    StatusCode};
+    pub use super::router::Parameters;
 
     pub use futures::{Future, IntoFuture};
     pub use ext::{BoxFuture, FutureExt, IntoFutureExt};

@@ -3,7 +3,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::collections::HashMap;
 
-use regex::{Regex, Error as RegexError};
+use regex::{Error as RegexError, Regex};
 
 use super::Parameters;
 
@@ -14,19 +14,21 @@ pub struct Pattern {
 
 impl Pattern {
     pub(crate) fn new(re: Regex) -> Self {
-        let names = re
-            .capture_names()
+        let names = re.capture_names()
             .enumerate()
             .filter_map(|(i, name)| name.map(|name| (name.to_owned(), i)))
             .collect();
 
-        Pattern { re, names: Arc::new(names) }
+        Pattern {
+            re,
+            names: Arc::new(names),
+        }
     }
 
     pub(crate) fn parameters(&self, text: &str) -> Option<Parameters> {
         let captures = match self.re.captures(text) {
             Some(captures) => captures,
-            None => { return None }
+            None => return None,
         };
 
         Some(Parameters::new(self.names.clone(), text, captures))

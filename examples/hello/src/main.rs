@@ -22,8 +22,10 @@ fn hello_world(_: Context) -> &'static str {
 }
 
 fn hello(ctx: Context) -> String {
-    // FIXME: Use `?`
-    format!("Hello, {}!", ctx.get::<Parameters>().unwrap().name("name").unwrap())
+    format!(
+        "Hello, {}!",
+        ctx.get::<Parameters>().unwrap().name("name").unwrap()
+    )
 }
 
 fn main() {

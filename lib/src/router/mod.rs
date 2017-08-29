@@ -166,8 +166,14 @@ mod tests {
         // FIXME: This section currently matches against regex
         //        This is an implementation detail; store the source strings and we'll
         //        match against that
-        assert_eq!(router.find(&Get, "/hello").unwrap().pattern().as_str(), "^/hello$");
-        assert_eq!(router.find(&Get, "/aa").unwrap().pattern().as_str(), "^/aa$");
+        assert_eq!(
+            router.find(&Get, "/hello").unwrap().pattern().as_str(),
+            "^/hello$"
+        );
+        assert_eq!(
+            router.find(&Get, "/aa").unwrap().pattern().as_str(),
+            "^/aa$"
+        );
     }
 
     /// Test for some match for segment parameter

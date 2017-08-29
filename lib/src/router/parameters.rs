@@ -15,14 +15,17 @@ impl Parameters {
         Parameters {
             names,
             text: text.into(),
-            matches: captures.iter().map(|capture| capture.map(|m| (m.start(), m.end()))).collect(),
+            matches: captures
+                .iter()
+                .map(|capture| capture.map(|m| (m.start(), m.end())))
+                .collect(),
         }
     }
 
     pub fn get(&self, index: usize) -> Option<&str> {
-        self.matches.get(index).and_then(|m| {
-            m.map(|(start, end)| &self.text[start..end])
-        })
+        self.matches
+            .get(index)
+            .and_then(|m| m.map(|(start, end)| &self.text[start..end]))
     }
 
     pub fn name(&self, name: &str) -> Option<&str> {

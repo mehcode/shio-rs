@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use tokio_core::reactor::Handle;
-use typemap::{TypeMap, Key};
+use typemap::{Key, TypeMap};
 
 use request::{Body, Request};
 
@@ -22,7 +22,11 @@ pub struct Context {
 
 impl Context {
     pub(crate) fn new(handle: Handle, request: Request) -> Self {
-        Context { handle, request, state: TypeMap::new() }
+        Context {
+            handle,
+            request,
+            state: TypeMap::new(),
+        }
     }
 
     /// Return a reference to a handle to the event loop this `Context` is associated with.
