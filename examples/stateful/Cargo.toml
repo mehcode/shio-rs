@@ -1,5 +1,5 @@
 [package]
-name = "state"
+name = "stateful"
 version = "0.0.0"
 workspace = "../.."
 

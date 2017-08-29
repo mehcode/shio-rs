@@ -7,7 +7,7 @@ members = [
   "examples/hello",
   "examples/json",
   "examples/proxy",
-  "examples/state",
+  "examples/stateful",
   "examples/responder",
   "examples/redirect",
   "examples/templates_askama",

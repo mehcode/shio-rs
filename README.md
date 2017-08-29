@@ -39,7 +39,7 @@ fn main() {
 
 ## Examples
 
-### [Stateful](examples/state/src/main.rs)
+### [Stateful](examples/stateful/src/main.rs)
 
 Handlers are **not** cloned on each request and therefore may contain state.
 Note that any fields must be `Send + Sync`.
