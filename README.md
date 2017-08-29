@@ -27,12 +27,17 @@ extern crate shio;
 use shio::prelude::*;
 
 fn hello_world(_: Context) -> &'static str {
-    "Hello World\n"
+    "Hello World!\n"
+}
+
+fn hello(ctx: Context) -> String {
+    format!("Hello, {}!\n", &ctx.get::<Parameters>()["name"])
 }
 
 fn main() {
     Shio::default()
         .route((Method::Get, "/", hello_world))
+        .route((Method::Get, "/{name}", hello))
         .run(":7878").unwrap();
 }
 ```
@@ -40,6 +45,11 @@ fn main() {
 ## Examples
 
 ### [Stateful](examples/stateful/src/main.rs)
+
+A request handler is a value that implements the `shio::Handler` trait.
+Functions of the type `fn(Context) -> R` (
+where `R` implements `shio::response::Responder`) automatically
+implement this trait.
 
 Handlers are **not** cloned on each request and therefore may contain state.
 Note that any fields must be `Send + Sync`.
@@ -75,7 +85,11 @@ impl shio::Handler for HandlerWithState {
 
 Many more usage [examples/](https://github.com/mehcode/shio-rs/tree/master/examples) are included with Shio.
 
-Examples may be ran with `cargo run -p <example name>`. For instance, to run the `hello` example, use:
+  - [Render templates](examples/templates_askama/src/main.rs) with [Askama](https://github.com/djc/askama)
+  - [Stream a HTTP request](examples/proxy/src/main.rs) with [Hyper](https://github.com/hyperium/hyper)
+
+Examples may be ran with `cargo run -p <example name>`.
+For instance, to run the `hello` example, use:
 
 ```bash
 $ cargo run -p hello
