@@ -117,7 +117,6 @@ impl Handler for Router {
 
                 // Re-parse the path to pull out captures
                 if let Some(captures) = route.pattern().captures(ctx.path()) {
-                    println!("params: {:?}", captures);
                 } else {
                     // NOTE: This shouldn't be possible to fail as we already matched against the
                     //       path once. In the pathological case that we do fail here, stop
