@@ -27,7 +27,7 @@ macro_rules! try_opt {
     )
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Router {
     routes: HashMap<Method, Vec<Route>>,
     route_patterns: HashMap<Method, RegexSet>,
