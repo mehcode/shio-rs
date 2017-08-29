@@ -24,12 +24,14 @@ impl Parameters {
 
     pub fn get(&self, index: usize) -> Option<&str> {
         self.matches
-            .get(index)
+            // +1 is added as matches start at 1 in regex (with 0 referring to the
+            //  whole matched text)
+            .get(index + 1)
             .and_then(|m| m.map(|(start, end)| &self.text[start..end]))
     }
 
     pub fn name(&self, name: &str) -> Option<&str> {
-        self.names.get(name).and_then(|&i| self.get(i))
+        self.names.get(name).and_then(|&i| self.get(i - 1))
     }
 }
 
