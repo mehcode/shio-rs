@@ -1,12 +1,13 @@
 use std::fmt;
 
 use hyper::{self, Method};
+use futures::IntoFuture;
 
 use context::Context;
 use handler::{BoxHandler, Handler};
 use response::Response;
 use router::pattern::Pattern;
-use ext::{BoxFuture, IntoFutureExt};
+use ext::{BoxFuture};
 
 /// Route contains a [`Handler`] and information for matching against requests.
 pub struct Route {
@@ -30,7 +31,7 @@ impl Route {
     where
         P: Into<Pattern>,
         H: Handler + 'static,
-        <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
+        <H::Result as IntoFuture>::Error: fmt::Debug + Send,
     {
         Route {
             handler: handler.into_box(),
@@ -59,7 +60,7 @@ impl<P, H> From<(Method, P, H)> for Route
 where
     P: Into<Pattern>,
     H: Handler + 'static,
-    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
+    <H::Result as IntoFuture>::Error: fmt::Debug + Send,
 {
     fn from(arguments: (Method, P, H)) -> Self {
         Route::new(arguments.0, arguments.1, arguments.2)

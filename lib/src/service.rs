@@ -4,13 +4,13 @@ use std::panic::AssertUnwindSafe;
 
 use hyper;
 use tokio_core::reactor::Handle;
-use futures::{future, Future};
+use futures::{future, Future, IntoFuture};
 
 use request::Request;
 use response::Response;
 use handler::{default_catch, Handler};
 use context::Context;
-use ext::{BoxFuture, IntoFutureExt};
+use ext::{BoxFuture};
 
 // FIXME: Why does #[derive(Clone)] not work here? This _seems_ like a implementation that
 //        should be auto-derived.
@@ -18,7 +18,7 @@ use ext::{BoxFuture, IntoFutureExt};
 // #[derive(Clone)]
 pub(crate) struct Service<H: Handler + 'static>
 where
-    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
+    <H::Result as IntoFuture>::Error: fmt::Debug + Send,
 {
     handler: Arc<H>,
     handle: Handle,
@@ -26,7 +26,7 @@ where
 
 impl<H: Handler + 'static> Service<H>
 where
-    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
+    <H::Result as IntoFuture>::Error: fmt::Debug + Send,
 {
     pub(crate) fn new(handler: Arc<H>, handle: Handle) -> Self {
         Service { handler, handle }
@@ -35,7 +35,7 @@ where
 
 impl<H: Handler + 'static> Clone for Service<H>
 where
-    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
+    <H::Result as IntoFuture>::Error: fmt::Debug + Send,
 {
     fn clone(&self) -> Self {
         Service {
@@ -47,7 +47,7 @@ where
 
 impl<H: Handler + 'static> hyper::server::Service for Service<H>
 where
-    <H::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
+    <H::Result as IntoFuture>::Error: fmt::Debug + Send,
 {
     type Request = hyper::Request;
     type Response = hyper::Response;
@@ -60,7 +60,7 @@ where
         let handler = self.handler.clone();
 
         Box::new(
-            AssertUnwindSafe(future::lazy(move || handler.call(ctx).into_future_ext()))
+            AssertUnwindSafe(future::lazy(move || handler.call(ctx).into_future()))
                 .catch_unwind()
                 .then(|result| -> BoxFuture<hyper::Response, hyper::Error> {
                     Box::new(future::ok(

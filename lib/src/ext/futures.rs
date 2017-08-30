@@ -1,6 +1,10 @@
 use std::fmt;
 
+use hyper;
+
 use futures::Future;
+use futures::future::{self, FutureResult};
+use response::{Response, Responder};
 
 /// A type alias for Box<Item = T, Error = E>
 #[cfg_attr(feature = "cargo-clippy", allow(stutter))]
@@ -16,10 +20,3 @@ pub trait FutureExt: Future {
 }
 
 impl<F: Future> FutureExt for F {}
-
-pub trait IntoFutureExt<T> {
-    type Error: fmt::Debug + Send;
-    type Future: Future<Item = T, Error = Self::Error>;
-
-    fn into_future_ext(self) -> Self::Future;
-}

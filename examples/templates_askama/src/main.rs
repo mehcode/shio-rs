@@ -12,10 +12,10 @@ struct HelloTemplate {
     name: String,
 }
 
-fn hello(ctx: Context) -> HelloTemplate {
-    HelloTemplate {
+fn hello(ctx: Context) -> Result<Response, askama::Error> {
+    Response::with(HelloTemplate {
         name: ctx.get::<Parameters>()["name"].into(),
-    }
+    })
 }
 
 fn main() {

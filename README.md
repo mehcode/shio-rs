@@ -26,12 +26,12 @@ extern crate shio;
 
 use shio::prelude::*;
 
-fn hello_world(_: Context) -> &'static str {
-    "Hello World!\n"
+fn hello_world(_: Context) -> Response {
+    Response::with("Hello World!\n")
 }
 
-fn hello(ctx: Context) -> String {
-    format!("Hello, {}!\n", &ctx.get::<Parameters>()["name"])
+fn hello(ctx: Context) -> Response {
+    Response::with(format!("Hello, {}!\n", &ctx.get::<Parameters>()["name"]))
 }
 
 fn main() {

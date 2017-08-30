@@ -10,16 +10,16 @@ struct HandlerWithState {
 }
 
 impl shio::Handler for HandlerWithState {
-    type Result = String;
+    type Result = Response;
 
     fn call(&self, _: Context) -> Self::Result {
         let counter = self.counter.fetch_add(1, Ordering::Relaxed);
 
-        format!(
+        Response::with(format!(
             "Hi, #{} (from thread: {:?})\n",
             counter,
             thread::current().id()
-        )
+        ))
     }
 }
 

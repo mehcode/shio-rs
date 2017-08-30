@@ -8,9 +8,7 @@ members = [
   "examples/json",
   "examples/proxy",
   "examples/stateful",
-  "examples/responder",
   "examples/redirect",
-  "examples/middleware",
   "examples/templates_askama",
   "examples/postgres",
 ]

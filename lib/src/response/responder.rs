@@ -6,7 +6,7 @@ use futures::{future, Future, IntoFuture};
 use response::Response;
 use StatusCode;
 use header::ContentLength;
-use ext::{BoxFuture, FutureExt, IntoFutureExt};
+use ext::{BoxFuture, FutureExt};
 use handler::default_catch;
 
 pub trait Responder
@@ -105,18 +105,6 @@ where
                 .into_box(),
             Err(error) => future::ok(default_catch(error)).into_box(),
         }).into_box()
-    }
-}
-
-impl<R: Responder + 'static> IntoFutureExt<Response> for R
-where
-    <<R as Responder>::Result as IntoFuture>::Error: fmt::Debug + Send,
-{
-    type Error = <R::Result as IntoFuture>::Error;
-    type Future = <R::Result as IntoFuture>::Future;
-
-    fn into_future_ext(self) -> Self::Future {
-        self.to_response().into_future()
     }
 }
 

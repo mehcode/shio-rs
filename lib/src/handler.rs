@@ -1,12 +1,12 @@
 use std::fmt;
 
-use futures::Future;
+use futures::{Future, IntoFuture};
 use hyper;
 
 use response::Response;
 use context::Context;
 use StatusCode;
-use ext::{BoxFuture, FutureExt, IntoFutureExt};
+use ext::{BoxFuture, FutureExt};
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value, use_debug))]
 pub(crate) fn default_catch<E: fmt::Debug + Send>(err: E) -> Response {
@@ -27,9 +27,9 @@ pub(crate) fn default_catch<E: fmt::Debug + Send>(err: E) -> Response {
 
 pub trait Handler: Send + Sync
 where
-    <Self::Result as IntoFutureExt<Response>>::Error: fmt::Debug + Send,
+    <Self::Result as IntoFuture>::Error: fmt::Debug + Send,
 {
-    type Result: IntoFutureExt<Response>;
+    type Result: IntoFuture<Item = Response>;
 
     fn call(&self, context: Context) -> Self::Result;
 
@@ -40,7 +40,7 @@ where
     {
         Box::new(move |ctx: Context| -> BoxFuture<Response, hyper::Error> {
             self.call(ctx)
-                .into_future_ext()
+                .into_future()
                 .or_else(default_catch)
                 .into_box()
         })
@@ -53,7 +53,7 @@ pub type BoxHandler = Box<Handler<Result = BoxFuture<Response, hyper::Error>>>;
 impl<TError, TFuture, TFn> Handler for TFn
 where
     TError: fmt::Debug + Send,
-    TFuture: IntoFutureExt<Response, Error = TError>,
+    TFuture: IntoFuture<Item = Response, Error = TError>,
     TFn: Send + Sync,
     TFn: Fn(Context) -> TFuture,
 {

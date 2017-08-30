@@ -3,10 +3,8 @@ extern crate shio;
 use shio::prelude::*;
 
 // Simple requests should be simple, even in the face of asynchronous design.
-fn hello_world(_: Context) -> &'static str {
-    // Handlers may return a value that implements `Responder`
-    // &str implements `Responder` and sets both the body and the `Content-Length` header
-    "Hello World!\n"
+fn hello_world(_: Context) -> Response {
+    Response::with("Hello World!\n")
 
     // This would be equivalent to returning `Response` and:
 
@@ -21,12 +19,12 @@ fn hello_world(_: Context) -> &'static str {
     // The default status code is `Status::Ok` (200).
 }
 
-fn hello(ctx: Context) -> String {
+fn hello(ctx: Context) -> Response {
     // Handlers have access to a type map which is a HashMap where the keys are types.
     //
     // With the default router, an instance of `Parameters` is present in this type map
     // that provides access to our route parameters.
-    format!("Hello, {}!", &ctx.get::<Parameters>()["name"])
+    Response::with(format!("Hello, {}!", &ctx.get::<Parameters>()["name"]))
 }
 
 fn main() {

@@ -1,4 +1,3 @@
-#![cfg_attr(feature = "nightly", feature(specialization))]
 #![cfg_attr(feature = "cargo-clippy", warn(clippy, clippy_pedantic))]
 #![cfg_attr(feature = "cargo-clippy", allow(missing_docs_in_private_items))]
 
