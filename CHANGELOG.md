@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2017-08-30
+### Removed
+  - Handlers must now return `Response` or `BoxFuture<Response, _>`.
+    This is being broken now for future compatibility with ` -> impl Future`.
+    This will be revisited at a later time.
+
+    If you'd like to improve the situation here, figure out how to accept
+    the following handlers:
+
+    ```rust
+    fn index(c: Context) -> impl Responder { /* [...] */ }
+    fn index(c: Context) -> BoxFuture<impl Responder, _> { /* [...] */ }
+    fn index(c: Context) -> impl Future<Item = impl Responder> { /* [...] */ }
+    ```
+
+    With our previous solution we could accept the first 2 only.
+    Not accepting the last blocks using ` -> impl Future` (and thus
+    blocks `await!`).
+
 ## [0.1.0] - 2017-08-30
 No significant changes.
 
@@ -114,7 +133,8 @@ No significant changes.
   - Asynchronous `Handler` that can be a simple function.
   - Service for `tokio` that is a multithreaded abstraction over `Handler`.
 
-[Unreleased]: ../../compare/v0.1.0...HEAD
+[Unreleased]: ../../compare/v0.2.0...HEAD
+[0.2.0]: ../../compare/v0.2.0...v0.1.0
 [0.1.0]: ../../compare/v0.1.0...v0.0.8
 [0.0.8]: ../../compare/v0.0.8...v0.0.7
 [0.0.7]: ../../compare/v0.0.7...v0.0.6
