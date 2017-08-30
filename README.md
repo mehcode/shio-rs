@@ -47,9 +47,6 @@ fn main() {
 ### [Stateful](examples/stateful/src/main.rs)
 
 A request handler is a value that implements the `shio::Handler` trait.
-Functions of the type `fn(Context) -> R` (
-where `R` implements `shio::response::Responder`) automatically
-implement this trait.
 
 Handlers are **not** cloned on each request and therefore may contain state.
 Note that any fields must be `Send + Sync`.
@@ -67,16 +64,16 @@ struct HandlerWithState {
 }
 
 impl shio::Handler for HandlerWithState {
-    type Result = String;
+    type Result = Response;
 
     fn call(&self, _: Context) -> Self::Result {
         let counter = self.counter.fetch_add(1, Ordering::Relaxed);
 
-        format!(
+        Response::with(format!(
             "Hi, #{} (from thread: {:?})\n",
             counter,
             thread::current().id()
-        )
+        ))
     }
 }
 ```
