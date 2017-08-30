@@ -18,7 +18,7 @@
 
 ```toml
 [dependencies]
-shio = "0.0.8"
+shio = "0.1.0"
 ```
 
 ```rust
