@@ -21,7 +21,8 @@ tokio-proto = "0.1.1"
 regex = "0.2"
 log = "0.3"
 typemap = "0.3"
+futures-await = { git = 'https://github.com/alexcrichton/futures-await', optional = true }
 
 [features]
 default = []
-nightly = []
+nightly = ["futures-await"]
