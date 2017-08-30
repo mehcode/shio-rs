@@ -2,7 +2,6 @@
 #![cfg_attr(feature = "cargo-clippy", warn(clippy, clippy_pedantic))]
 #![cfg_attr(feature = "cargo-clippy", allow(missing_docs_in_private_items))]
 
-extern crate bytes;
 extern crate futures;
 extern crate hyper;
 #[macro_use]
