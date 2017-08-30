@@ -1,6 +1,7 @@
 
 extern crate futures_state_stream;
 extern crate pretty_env_logger;
+#[allow(unused_extern_crates)]
 extern crate serde;
 extern crate serde_json;
 extern crate shio;
