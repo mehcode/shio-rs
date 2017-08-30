@@ -18,7 +18,7 @@
 
 ```toml
 [dependencies]
-shio = "0.2.0"
+shio = { git = "https://github.com/mehcode/shio-rs", branch = "await" }
 ```
 
 ```rust

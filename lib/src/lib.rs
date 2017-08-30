@@ -1,7 +1,10 @@
 #![cfg_attr(feature = "cargo-clippy", warn(clippy, clippy_pedantic))]
 #![cfg_attr(feature = "cargo-clippy", allow(missing_docs_in_private_items))]
 
+#[cfg(not(feature = "nightly"))]
 extern crate futures;
+#[cfg(feature = "nightly")]
+extern crate futures_await as futures;
 extern crate hyper;
 #[macro_use]
 extern crate log;
