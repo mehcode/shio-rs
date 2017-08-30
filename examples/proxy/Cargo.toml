@@ -4,5 +4,6 @@ version = "0.0.0"
 workspace = "../.."
 
 [dependencies]
-shio = { path = "../../lib" }
+shio = { path = "../../lib", features = ["nightly"] }
 hyper = "0.11"
+futures-await = { git = 'https://github.com/alexcrichton/futures-await' }

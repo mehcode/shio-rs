@@ -1,4 +1,6 @@
+#![feature(proc_macro, conservative_impl_trait, generators)]
 
+extern crate futures_await as futures;
 extern crate futures_state_stream;
 extern crate pretty_env_logger;
 #[allow(unused_extern_crates)]
@@ -26,6 +28,7 @@ mod errors {
     }
 }
 
+use futures::prelude::*;
 use futures_state_stream::StateStream;
 use postgres::{Connection, TlsMode};
 use shio::prelude::*;
@@ -39,53 +42,46 @@ struct Person {
 
 const DATABASE_URL: &'static str = "postgres://postgres@localhost/shio_dev_example";
 
-fn index(ctx: Context) -> BoxFuture<Response, Error> {
-    Connection::connect(DATABASE_URL, TlsMode::None, &ctx.handle())
-        .from_err::<Error>()
-        .and_then(|conn| {
-            conn.batch_execute(
-                r#"
-                CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-                CREATE TABLE IF NOT EXISTS person (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v1mc(),
-                    name TEXT NOT NULL
-                );
-            "#,
-            ).from_err()
-        })
-        .and_then(|conn| {
-            conn.prepare("INSERT INTO person (name) VALUES ($1)")
-                .from_err()
-        })
-        .and_then(move |(stmt, conn)| {
-            let name: &str = &ctx.get::<Parameters>()["name"];
+#[async]
+fn index(ctx: Context) -> Result<Response> {
+    let conn = await!(Connection::connect(DATABASE_URL, TlsMode::None, &ctx.handle()))?;
 
-            conn.execute(&stmt, &[&name]).from_err()
-        })
-        .and_then(|(_, conn)| {
-            conn.prepare("SELECT id, name FROM person").from_err()
-        })
-        .and_then(|(stmt, conn)| {
-            conn.query(&stmt, &[])
-                .map(|row| {
-                    Person {
-                        id: row.get("id"),
-                        name: row.get("name"),
-                    }
-                })
-                .collect()
-                .from_err()
-        })
-        .and_then(|(results, _)| {
-            let s = serde_json::to_string(&results)?;
+    // Setup UUID extension and create table (if needed)
 
-            Ok(
-                Response::build()
-                    .header(header::ContentType::json())
-                    .body(s),
-            )
-        })
-        .into_box()
+    let conn = await!(conn.batch_execute(r#"
+        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+        CREATE TABLE IF NOT EXISTS person (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v1mc(),
+            name TEXT NOT NULL
+        );
+    "#))?;
+
+    // Insert row into table
+
+    let (stmt, conn) = await!(conn.prepare("INSERT INTO person (name) VALUES ($1)"))?;
+
+    let name: String = ctx.get::<Parameters>()["name"].into();
+    let (_, conn) = await!(conn.execute(&stmt, &[&name]))?;
+
+    // Select all rows from table
+
+    let (stmt, conn) = await!(conn.prepare("SELECT id, name FROM person"))?;
+    let (results, _) = await!(conn.query(&stmt, &[]).map(|row| {
+        Person {
+            id: row.get("id"),
+            name: row.get("name"),
+        }
+    }).collect())?;
+
+    // Return rows as JSON
+
+    let s = serde_json::to_string(&results)?;
+
+    Ok(
+        Response::build()
+            .header(header::ContentType::json())
+            .body(s),
+    )
 }
 
 fn main() {

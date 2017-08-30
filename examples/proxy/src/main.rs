@@ -1,6 +1,8 @@
 //! Proxy google and stream the response back to the client.
 //! This could be expanded into a simple http-proxy.
 
+#![feature(proc_macro, conservative_impl_trait, generators)]
+
 // TODO: Expand this a bit.
 //  - Add some command line args: `proxy -p 7878 http://www.google.com`
 //  - Add log and log when a request is proxied
@@ -9,24 +11,22 @@
 
 extern crate hyper;
 extern crate shio;
+extern crate futures_await as futures;
 
+use futures::prelude::*;
 use shio::prelude::*;
 use hyper::Client;
 
-fn proxy(ctx: Context) -> BoxFuture<Response, hyper::Error> {
+#[async]
+fn proxy(ctx: Context) -> Result<Response, hyper::Error> {
     // Additional work can be scheduled on the thread-local event loop,
     // as each handler receives a reference to it
-    Client::new(ctx.handle())
-        .get("http://www.google.com".parse().unwrap())
-        // Map the _streaming_ response from google into a _streaming_
-        // response from us
-        .map(|res| Response::build().body(res.body()))
-        // Use `.into_box` to turn this future stream into a `BoxFuture`
-        // that can be easily returned on stable Rust.
-        //
-        // When `impl Trait` becomes available on stable Rust, this
-        // necessity will go away
-        .into_box()
+    let client = Client::new(ctx.handle());
+    let res = await!(client.get("http://www.google.com".parse().unwrap()))?;
+
+    // Map the _streaming_ response from google into a _streaming_
+    // response from us
+    Ok(Response::build().body(res.body()))
 }
 
 fn main() {
