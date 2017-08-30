@@ -1,10 +1,11 @@
-extern crate shio;
+
 extern crate futures_state_stream;
+extern crate pretty_env_logger;
 extern crate serde;
 extern crate serde_json;
+extern crate shio;
 extern crate tokio_postgres as postgres;
 extern crate uuid;
-extern crate pretty_env_logger;
 
 #[macro_use]
 extern crate serde_derive;
@@ -41,16 +42,19 @@ fn index(ctx: Context) -> BoxFuture<Response, Error> {
     Connection::connect(DATABASE_URL, TlsMode::None, &ctx.handle())
         .from_err::<Error>()
         .and_then(|conn| {
-            conn.batch_execute(r#"
+            conn.batch_execute(
+                r#"
                 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
                 CREATE TABLE IF NOT EXISTS person (
                     id UUID PRIMARY KEY DEFAULT uuid_generate_v1mc(),
                     name TEXT NOT NULL
                 );
-            "#).from_err()
+            "#,
+            ).from_err()
         })
         .and_then(|conn| {
-            conn.prepare("INSERT INTO person (name) VALUES ($1)").from_err()
+            conn.prepare("INSERT INTO person (name) VALUES ($1)")
+                .from_err()
         })
         .and_then(move |(stmt, conn)| {
             let name: &str = &ctx.get::<Parameters>()["name"];
@@ -61,14 +65,24 @@ fn index(ctx: Context) -> BoxFuture<Response, Error> {
             conn.prepare("SELECT id, name FROM person").from_err()
         })
         .and_then(|(stmt, conn)| {
-            conn.query(&stmt, &[]).map(|row| {
-                Person { id: row.get("id"), name: row.get("name") }
-            }).collect().from_err()
+            conn.query(&stmt, &[])
+                .map(|row| {
+                    Person {
+                        id: row.get("id"),
+                        name: row.get("name"),
+                    }
+                })
+                .collect()
+                .from_err()
         })
         .and_then(|(results, _)| {
             let s = serde_json::to_string(&results)?;
 
-            Ok(Response::build().header(header::ContentType::json()).body(s))
+            Ok(
+                Response::build()
+                    .header(header::ContentType::json())
+                    .body(s),
+            )
         })
         .into_box()
 }

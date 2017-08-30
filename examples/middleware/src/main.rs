@@ -1,6 +1,6 @@
 extern crate shio;
 
-use shio::{Handler, Shio, Context, Response, Method};
+use shio::{Context, Handler, Method, Response, Shio};
 use shio::ext::IntoFutureExt;
 use shio::router::Router;
 
@@ -22,10 +22,11 @@ impl<H: Handler> Middleware<H> for () {
 
 #[derive(Debug)]
 struct Stack<H, M = ()>(H, M)
-where H: Handler, M: Middleware<H>;
+where
+    H: Handler,
+    M: Middleware<H>;
 
-impl<H: Handler, M: Middleware<H>> Handler for Stack<H, M>
-{
+impl<H: Handler, M: Middleware<H>> Handler for Stack<H, M> {
     type Result = M::Result;
 
     fn call(&self, context: Context) -> Self::Result {
@@ -78,14 +79,8 @@ fn main() {
     // TODO: Dream up a nice way to construct this contraption
 
     let stack = Stack(
-        Stack(
-            Stack(
-                Stack(router, ()),
-                Multiply(3),
-            ),
-            Multiply(2)
-        ),
-        Number(231)
+        Stack(Stack(Stack(router, ()), Multiply(3)), Multiply(2)),
+        Number(231),
     );
 
     Shio::new(stack).run(":7878").unwrap();
