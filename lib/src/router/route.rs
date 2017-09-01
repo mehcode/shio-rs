@@ -33,7 +33,7 @@ impl Route {
         H: Handler + 'static,
         <H::Result as IntoFuture>::Error: fmt::Debug + Send,
     {
-        Route {
+        Self {
             handler: handler.into_box(),
             pattern: pattern.into(),
             method,
@@ -63,7 +63,7 @@ where
     <H::Result as IntoFuture>::Error: fmt::Debug + Send,
 {
     fn from(arguments: (Method, P, H)) -> Self {
-        Route::new(arguments.0, arguments.1, arguments.2)
+        Self::new(arguments.0, arguments.1, arguments.2)
     }
 }
 

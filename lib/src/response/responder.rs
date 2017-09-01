@@ -78,7 +78,7 @@ where
 }
 
 impl Responder for Response {
-    type Result = Response;
+    type Result = Self;
 
     #[inline]
     fn to_response(self) -> Self::Result {

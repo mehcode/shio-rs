@@ -19,7 +19,7 @@ impl Pattern {
             .filter_map(|(i, name)| name.map(|name| (name.to_owned(), i)))
             .collect();
 
-        Pattern {
+        Self {
             re,
             names: Arc::new(names),
         }
@@ -62,7 +62,7 @@ impl<'a> From<&'a str> for Pattern {
 
 impl From<Regex> for Pattern {
     fn from(val: Regex) -> Self {
-        Pattern::new(val)
+        Self::new(val)
     }
 }
 
@@ -98,7 +98,7 @@ fn parse(pattern: &str) -> String {
                 param_pattern.clear();
             } else if in_param_pattern {
                 // Ignore leading whitespace for pattern
-                if !(ch == ' ' && param_pattern.len() == 0) {
+                if !(ch == ' ' && param_pattern.is_empty()) {
                     param_pattern.push(ch);
                 }
             } else {

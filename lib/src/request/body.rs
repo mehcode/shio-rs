@@ -15,13 +15,13 @@ pub struct Body {
 
 impl Body {
     pub(crate) fn new(body: hyper::Body) -> Self {
-        Body { body, chunk: None }
+        Self { body, chunk: None }
     }
 }
 
 impl Default for Body {
     fn default() -> Self {
-        Body::new(Default::default())
+        Self::new(Default::default())
     }
 }
 

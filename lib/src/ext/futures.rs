@@ -1,10 +1,9 @@
-use std::fmt;
-
-use hyper;
-
 use futures::Future;
-use futures::future::{self, FutureResult};
-use response::{Response, Responder};
+
+pub trait Future2 {
+    type Item;
+    type Error;
+}
 
 /// A type alias for Box<Item = T, Error = E>
 #[cfg_attr(feature = "cargo-clippy", allow(stutter))]

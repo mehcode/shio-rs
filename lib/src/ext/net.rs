@@ -12,7 +12,7 @@ pub trait ToSocketAddrsExt {
 }
 
 impl<'a> ToSocketAddrsExt for &'a str {
-    type Iter = <str as ToSocketAddrs>::Iter;
+    type Iter = <Self as ToSocketAddrs>::Iter;
 
     #[cfg_attr(feature = "cargo-clippy", allow(result_unwrap_used))]
     fn to_socket_addrs_ext(&self) -> io::Result<Self::Iter> {
@@ -39,7 +39,7 @@ impl<'a> ToSocketAddrsExt for &'a str {
 }
 
 impl ToSocketAddrsExt for String {
-    type Iter = <String as ToSocketAddrs>::Iter;
+    type Iter = <Self as ToSocketAddrs>::Iter;
 
     fn to_socket_addrs_ext(&self) -> io::Result<Self::Iter> {
         (&**self).to_socket_addrs_ext()

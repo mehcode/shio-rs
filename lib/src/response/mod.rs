@@ -19,7 +19,7 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn new() -> Response {
+    pub fn new() -> Self {
         Default::default()
     }
 
@@ -74,14 +74,14 @@ impl Response {
 
 impl Default for Response {
     fn default() -> Self {
-        Response {
+        Self {
             inner: hyper::Response::new(),
         }
     }
 }
 
 impl IntoFuture for Response {
-    type Item = Response;
+    type Item = Self;
     type Error = hyper::Error;
     type Future = FutureResult<Self::Item, Self::Error>;
 

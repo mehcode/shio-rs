@@ -31,7 +31,7 @@ impl Builder {
     /// Creates a new default instance of `Builder` to construct a [`Response`].
     ///
     /// [`Response`]: struct.Response.html
-    pub fn new() -> Builder {
+    pub fn new() -> Self {
         Default::default()
     }
 

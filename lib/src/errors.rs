@@ -34,7 +34,7 @@ impl Error for ListenError {
 
 impl<T: Into<ListenErrorKind>> From<T> for ListenError {
     fn from(err: T) -> Self {
-        ListenError { inner: err.into() }
+        Self { inner: err.into() }
     }
 }
 

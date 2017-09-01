@@ -16,7 +16,6 @@ use net2::unix::UnixTcpBuilderExt;
 use handler::Handler;
 use router::{Route, Router};
 use errors::ListenError;
-use response::Response;
 use ext::{ToSocketAddrsExt};
 use service::Service;
 
@@ -33,7 +32,7 @@ where
     <H::Result as IntoFuture>::Error: fmt::Debug + Send,
 {
     pub fn new(handler: H) -> Self {
-        Shio {
+        Self {
             handler: Arc::new(handler),
             threads: num_cpus::get(),
         }
@@ -128,7 +127,7 @@ where
 
 impl Default for Shio<Router> {
     fn default() -> Self {
-        Shio::new(Router::new())
+        Self::new(Router::new())
     }
 }
 

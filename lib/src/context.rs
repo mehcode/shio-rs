@@ -23,7 +23,7 @@ pub struct Context {
 
 impl Context {
     pub(crate) fn new(handle: Handle, request: Request) -> Self {
-        Context {
+        Self {
             handle,
             request,
             state: TypeMap::new(),

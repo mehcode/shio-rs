@@ -7,7 +7,6 @@ use tokio_core::reactor::Handle;
 use futures::{future, Future, IntoFuture};
 
 use request::Request;
-use response::Response;
 use handler::{default_catch, Handler};
 use context::Context;
 use ext::{BoxFuture};
@@ -29,7 +28,7 @@ where
     <H::Result as IntoFuture>::Error: fmt::Debug + Send,
 {
     pub(crate) fn new(handler: Arc<H>, handle: Handle) -> Self {
-        Service { handler, handle }
+        Self { handler, handle }
     }
 }
 
@@ -38,7 +37,7 @@ where
     <H::Result as IntoFuture>::Error: fmt::Debug + Send,
 {
     fn clone(&self) -> Self {
-        Service {
+        Self {
             handler: self.handler.clone(),
             handle: self.handle.clone(),
         }

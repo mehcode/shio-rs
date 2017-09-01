@@ -13,7 +13,7 @@ pub struct Parameters {
 
 impl Parameters {
     pub(crate) fn new(names: Arc<HashMap<String, usize>>, text: &str, captures: Captures) -> Self {
-        Parameters {
+        Self {
             names,
             text: text.into(),
             matches: captures
