@@ -1,9 +1,11 @@
 sudo: false
-cache: cargo
-language:
+
+cache:
   rust: true
   directories:
     $HOME/.cargo/bin
+
+language: rust
 
 addons:
   apt:
