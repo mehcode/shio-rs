@@ -1,6 +1,7 @@
 # Shio
 ![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)
 [![Build Status](https://travis-ci.org/mehcode/shio-rs.svg?branch=master)](https://travis-ci.org/mehcode/shio-rs)
+[![Coverage Status](https://coveralls.io/repos/github/mehcode/shio-rs/badge.svg?branch=master)](https://coveralls.io/github/mehcode/shio-rs?branch=master)
 [![Crates.io](https://img.shields.io/crates/v/shio.svg)](https://crates.io/crates/shio)
 [![Crates.io](https://img.shields.io/crates/d/shio.svg)](https://crates.io/crates/shio)
 [![Docs.rs](https://docs.rs/shio/badge.svg)](https://docs.rs/shio)
