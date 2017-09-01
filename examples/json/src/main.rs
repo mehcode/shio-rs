@@ -1,4 +1,4 @@
-#[allow(unused_extern_crates)] 
+#[allow(unused_extern_crates)]
 extern crate serde;
 extern crate serde_json;
 extern crate shio;

@@ -9,7 +9,7 @@ use futures::{future, Future, IntoFuture};
 use request::Request;
 use handler::{default_catch, Handler};
 use context::Context;
-use ext::{BoxFuture};
+use ext::BoxFuture;
 
 // FIXME: Why does #[derive(Clone)] not work here? This _seems_ like a implementation that
 //        should be auto-derived.

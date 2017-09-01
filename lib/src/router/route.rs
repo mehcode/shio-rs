@@ -7,7 +7,7 @@ use context::Context;
 use handler::{BoxHandler, Handler};
 use response::Response;
 use router::pattern::Pattern;
-use ext::{BoxFuture};
+use ext::BoxFuture;
 
 /// Route contains a [`Handler`] and information for matching against requests.
 pub struct Route {
