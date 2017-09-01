@@ -1,6 +1,9 @@
 sudo: false
 cache: cargo
-language: rust
+language:
+  rust: true
+  directories:
+    $HOME/.cargo/bin
 
 addons:
   apt:
@@ -22,7 +25,7 @@ env:
   - PATH=$HOME/.cargo/bin:$PATH
 
 before_script:
-  - cargo install cargo-travis -f
+  - cargo install -q cargo-travis || true
 
 script:
   - cargo test --all
