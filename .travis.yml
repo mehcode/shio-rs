@@ -33,7 +33,7 @@ script:
   - cargo test --all
 
 after_success:
-  - cargo coveralls
+  - cargo coveralls -p shio
 
 matrix:
   allow_failures:
