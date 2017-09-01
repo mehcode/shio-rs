@@ -127,11 +127,13 @@ mod tests {
     use hyper;
 
     use super::{Parameters, Router};
-    use {Context, Handler, Request};
+    use {Context, Handler, Request, Response, StatusCode};
     use Method::*;
 
     // Empty handler to use for route tests
-    fn empty_handler(_: Context) {}
+    fn empty_handler(_: Context) -> Response {
+        Response::with(StatusCode::NoContent)
+    }
 
     /// Test for _some_ match for static in GET
     #[test]
@@ -198,6 +200,8 @@ mod tests {
         router.add((Get, "/user/{id}", |context: Context| {
             // FIXME: We should have an assert that we got here
             assert_eq!(&context.get::<Parameters>()["id"], "3289");
+
+            Response::with(StatusCode::NoContent)
         }));
 
         let mut core = Core::new().unwrap();
@@ -237,6 +241,8 @@ mod tests {
                 &context.get::<Parameters>()["filename"],
                 "path/to/file/is/here"
             );
+
+            Response::with(StatusCode::NoContent)
         }));
 
         let mut core = Core::new().unwrap();
