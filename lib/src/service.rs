@@ -5,6 +5,8 @@ use std::panic::AssertUnwindSafe;
 use hyper;
 use tokio_core::reactor::Handle;
 use futures::{future, Future, IntoFuture};
+use typemap::TypeMap;
+use unsafe_any::UnsafeAny;
 
 use request::Request;
 use handler::{default_catch, Handler};
@@ -21,14 +23,23 @@ where
 {
     handler: Arc<H>,
     handle: Handle,
+    global_state: Arc<TypeMap<UnsafeAny + Send + Sync>>,
 }
 
 impl<H: Handler + 'static> Service<H>
 where
     <H::Result as IntoFuture>::Error: fmt::Debug + Send,
 {
-    pub(crate) fn new(handler: Arc<H>, handle: Handle) -> Self {
-        Self { handler, handle }
+    pub(crate) fn new(
+        handler: Arc<H>,
+        handle: Handle,
+        global_state: Arc<TypeMap<UnsafeAny + Send + Sync>>,
+    ) -> Self {
+        Self {
+            handler,
+            handle,
+            global_state,
+        }
     }
 }
 
@@ -40,6 +51,7 @@ where
         Self {
             handler: self.handler.clone(),
             handle: self.handle.clone(),
+            global_state: self.global_state.clone(),
         }
     }
 }
@@ -55,7 +67,7 @@ where
 
     fn call(&self, request: Self::Request) -> Self::Future {
         let request = Request::new(request.deconstruct());
-        let ctx = Context::new(self.handle.clone(), request);
+        let ctx = Context::new(self.handle.clone(), request, self.global_state.clone());
         let handler = self.handler.clone();
 
         Box::new(

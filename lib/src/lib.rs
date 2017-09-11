@@ -11,6 +11,7 @@ extern crate regex;
 extern crate tokio_core;
 extern crate tokio_io;
 extern crate typemap;
+extern crate unsafe_any;
 
 pub mod context;
 mod handler;

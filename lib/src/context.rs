@@ -1,8 +1,10 @@
 use std::ops::Deref;
+use std::sync::Arc;
 
 use tokio_core::reactor::Handle;
 use typemap::TypeMap;
 pub use typemap::Key;
+use unsafe_any::UnsafeAny;
 
 use request::{Body, Request};
 
@@ -19,14 +21,20 @@ pub struct Context {
     state: TypeMap,
     handle: Handle,
     request: Request,
+    global_state: Arc<TypeMap<UnsafeAny + Send + Sync>>,
 }
 
 impl Context {
-    pub(crate) fn new(handle: Handle, request: Request) -> Self {
+    pub(crate) fn new(
+        handle: Handle,
+        request: Request,
+        global_state: Arc<TypeMap<UnsafeAny + Send + Sync>>,
+    ) -> Self {
         Self {
             handle,
             request,
             state: TypeMap::new(),
+            global_state,
         }
     }
 
@@ -58,6 +66,26 @@ impl Context {
     /// Gets a value from the request context.
     pub fn try_get<K: Key>(&self) -> Option<&K::Value> {
         self.state.get::<K>()
+    }
+
+    /// Gets a value from the global context.
+    ///
+    /// # Panics
+    ///
+    /// If there is no value in the global context of the given type.
+    pub fn get_global<K: Key>(&self) -> &K::Value
+    where
+        <K as Key>::Value: Send + Sync,
+    {
+        self.global_state.get::<K>().unwrap()
+    }
+
+    /// Gets a value from the global context.
+    pub fn try_get_global<K: Key>(&self) -> Option<&K::Value>
+    where
+        <K as Key>::Value: Send + Sync,
+    {
+        self.global_state.get::<K>()
     }
 }
 
