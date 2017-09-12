@@ -2,7 +2,7 @@ use std::ops::Index;
 use std::sync::Arc;
 use std::collections::HashMap;
 
-use typemap::Key;
+use utils::typemap::Key;
 use regex::Captures;
 
 pub struct Parameters {

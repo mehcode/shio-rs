@@ -1,5 +1,6 @@
 #![cfg_attr(feature = "cargo-clippy", warn(clippy, clippy_pedantic))]
 #![cfg_attr(feature = "cargo-clippy", allow(missing_docs_in_private_items))]
+#![cfg_attr(feature = "nightly", feature(specialization))]
 
 extern crate futures;
 extern crate hyper;
@@ -10,7 +11,7 @@ extern crate num_cpus;
 extern crate regex;
 extern crate tokio_core;
 extern crate tokio_io;
-extern crate typemap;
+extern crate unsafe_any;
 
 pub mod context;
 mod handler;
@@ -21,6 +22,7 @@ pub mod response;
 pub mod request;
 pub mod errors;
 pub mod router;
+pub mod utils;
 
 pub use hyper::{header, Method, StatusCode};
 
