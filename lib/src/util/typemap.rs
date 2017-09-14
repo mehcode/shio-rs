@@ -1,4 +1,3 @@
-// Extracted code from https://github.com/reem/rust-typemap, and adapted for shio usage
 use std::collections::HashMap;
 use std::any::{Any, TypeId};
 use std::hash::{BuildHasherDefault, Hasher};
@@ -25,7 +24,6 @@ impl Hasher for TypeIdHasher {
     }
 }
 
-// exported only for avoid "private in public" error
 #[doc(hidden)]
 pub unsafe trait Implements<A: ?Sized + UnsafeAnyExt> {
     fn into_object(self) -> Box<A>;
@@ -110,7 +108,7 @@ mod tests {
     use std::mem;
     use std::hash::{Hash, Hasher};
 
-    use super::{Key, TypeMap, TypeId, TypeIdHasher};
+    use super::{Key, TypeId, TypeIdHasher, TypeMap};
 
     #[derive(Debug, PartialEq)]
     struct KeyType;
@@ -123,7 +121,7 @@ mod tests {
     }
 
     #[test]
-    fn test_key_value() {
+    fn test_pair_key_to_value() {
         let mut map = TypeMap::new();
         map.insert::<KeyType>(ValueType(32));
 
@@ -137,7 +135,9 @@ mod tests {
             let mut hasher = TypeIdHasher::default();
             type_id.hash(&mut hasher);
 
-            assert_eq!(hasher.finish(), unsafe { mem::transmute::<TypeId, u64>(type_id) });
+            assert_eq!(hasher.finish(), unsafe {
+                mem::transmute::<TypeId, u64>(type_id)
+            });
         }
 
         // Pick a variety of types, just to demonstrate it’s all sane.
