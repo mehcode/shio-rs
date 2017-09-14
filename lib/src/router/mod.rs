@@ -125,6 +125,8 @@ impl Handler for Router {
 mod tests {
     use tokio_core::reactor::Core;
     use hyper;
+    use util::typemap::TypeMap;
+    use std::sync::Arc;
 
     use super::{Parameters, Router};
     use {Context, Handler, Request, Response, StatusCode};
@@ -212,7 +214,7 @@ mod tests {
         let request = Request::new(
             hyper::Request::new(Get, "/user/3289".parse().unwrap()).deconstruct(),
         );
-        let context = Context::new(core.handle(), request);
+        let context = Context::new(core.handle(), request, Arc::new(TypeMap::custom()));
 
         let work = router.call(context);
 
@@ -250,7 +252,7 @@ mod tests {
         let request = Request::new(
             hyper::Request::new(Get, "/static/path/to/file/is/here".parse().unwrap()).deconstruct(),
         );
-        let context = Context::new(core.handle(), request);
+        let context = Context::new(core.handle(), request, Arc::new(TypeMap::custom()));
 
         let work = router.call(context);
 

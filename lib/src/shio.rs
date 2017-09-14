@@ -9,6 +9,8 @@ use hyper::server::Http;
 use tokio_core::net::TcpListener;
 use tokio_core::reactor::Core;
 use net2::TcpBuilder;
+use util::typemap::{TypeMap, Key};
+use unsafe_any::UnsafeAny;
 
 #[cfg(unix)]
 use net2::unix::UnixTcpBuilderExt;
@@ -25,6 +27,7 @@ where
 {
     handler: Arc<H>,
     threads: usize,
+    global_state: Arc<TypeMap<UnsafeAny + Send + Sync>>,
 }
 
 impl<H: Handler> Shio<H>
@@ -35,7 +38,17 @@ where
         Self {
             handler: Arc::new(handler),
             threads: num_cpus::get(),
+            global_state: Arc::new(TypeMap::custom()),
         }
+    }
+
+    /// Add data to global state
+    pub fn manage<K: Key>(&mut self, value: K::Value) -> &mut Self
+    where
+        <K as Key>::Value: Send + Sync,
+    {
+        Arc::get_mut(&mut self.global_state).map(|global_state| global_state.insert::<K>(value));
+        self
     }
 
     /// Set the number of threads to use.
@@ -51,12 +64,13 @@ where
         let spawn = || -> JoinHandle<Result<(), ListenError>> {
             let addrs = addrs.clone();
             let handler = self.handler.clone();
+            let global_state = self.global_state.clone();
 
             thread::spawn(move || -> Result<(), ListenError> {
                 let mut core = Core::new()?;
                 let mut work = Vec::new();
                 let handle = core.handle();
-                let service = Service::new(handler, handle.clone());
+                let service = Service::new(handler, handle.clone(), global_state);
 
                 for addr in &addrs {
                     let handle = handle.clone();
