@@ -5,7 +5,8 @@ use unsafe_any::UnsafeAny;
 
 use util::typemap::TypeMap;
 use request::{Body, Request};
-use state::{State, FromState, Key};
+use state::{State, FromState};
+pub use state::Key;
 
 /// `Context` represents the context of the current HTTP request.
 ///
