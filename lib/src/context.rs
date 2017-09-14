@@ -1,40 +1,39 @@
 use std::ops::Deref;
-use std::sync::Arc;
 
 use tokio_core::reactor::Handle;
 use unsafe_any::UnsafeAny;
 
-use request::{Body, Request};
 use util::typemap::TypeMap;
-pub use util::typemap::Key;
+use request::{Body, Request};
+use state::{State, FromState, Key};
 
 /// `Context` represents the context of the current HTTP request.
 ///
 /// A `Context` consists of:
 ///     - The current HTTP [`Request`].
+///     - Shared and per-request [`State`].
 ///     - A [`Handle`] referencing the event loop in which this request is being
 ///       handled.
 ///
 /// [`Handle`]: https://docs.rs/tokio-core/0.1/tokio_core/reactor/struct.Handle.html
 /// [`Request`]: ../request/struct.Request.html
+/// [`State`]: ../struct.State.html
 pub struct Context {
-    state: TypeMap,
+    state: State,
     handle: Handle,
     request: Request,
-    global_state: Arc<TypeMap<UnsafeAny + Send + Sync>>,
 }
 
 impl Context {
     pub(crate) fn new(
         handle: Handle,
         request: Request,
-        global_state: Arc<TypeMap<UnsafeAny + Send + Sync>>,
+        state: State,
     ) -> Self {
         Self {
             handle,
             request,
-            state: TypeMap::new(),
-            global_state,
+            state,
         }
     }
 
@@ -49,43 +48,31 @@ impl Context {
         self.request.body()
     }
 
-    /// Puts a value into the request context.
+    /// Puts a value into the request state.
     pub fn put<K: Key>(&mut self, value: K::Value) {
-        self.state.insert::<K>(value);
+        self.state.put::<K>(value);
     }
 
-    /// Gets a value from the request context.
+    /// Gets a value from the request state.
+    ///
+    /// With the `nightly` feature enabled, this will fallback to checking the shared
+    /// state.
     ///
     /// # Panics
     ///
-    /// If there is no value in the request context of the given type.
-    pub fn get<K: Key>(&self) -> &K::Value {
-        self.state.get::<K>().unwrap()
+    /// If there is no value in the request state of the given type.
+    pub fn get<T: FromState>(&self) -> &T::Value {
+        self.state.get::<T>()
     }
 
-    /// Gets a value from the request context.
-    pub fn try_get<K: Key>(&self) -> Option<&K::Value> {
-        self.state.get::<K>()
+    /// Gets a value from the request state.
+    pub fn try_get<T: FromState>(&self) -> Option<&T::Value> {
+        self.state.try_get::<T>()
     }
 
-    /// Gets a value from the global context.
-    ///
-    /// # Panics
-    ///
-    /// If there is no value in the global context of the given type.
-    pub fn get_global<K: Key>(&self) -> &K::Value
-    where
-        <K as Key>::Value: Send + Sync,
-    {
-        self.global_state.get::<K>().unwrap()
-    }
-
-    /// Gets a value from the global context.
-    pub fn try_get_global<K: Key>(&self) -> Option<&K::Value>
-    where
-        <K as Key>::Value: Send + Sync,
-    {
-        self.global_state.get::<K>()
+    /// Gets a reference to the shared state.
+    pub fn shared(&self) -> &TypeMap<UnsafeAny + Send + Sync> {
+        self.state.shared()
     }
 }
 

@@ -27,7 +27,7 @@ where
 {
     handler: Arc<H>,
     threads: usize,
-    global_state: Arc<TypeMap<UnsafeAny + Send + Sync>>,
+    shared_state: Arc<TypeMap<UnsafeAny + Send + Sync>>,
 }
 
 impl<H: Handler> Shio<H>
@@ -38,7 +38,7 @@ where
         Self {
             handler: Arc::new(handler),
             threads: num_cpus::get(),
-            global_state: Arc::new(TypeMap::custom()),
+            shared_state: Arc::new(TypeMap::custom()),
         }
     }
 
@@ -47,7 +47,7 @@ where
     where
         <K as Key>::Value: Send + Sync,
     {
-        Arc::get_mut(&mut self.global_state).map(|global_state| global_state.insert::<K>(value));
+        Arc::get_mut(&mut self.shared_state).map(|shared_state| shared_state.put::<K>(value));
         self
     }
 
@@ -64,13 +64,13 @@ where
         let spawn = || -> JoinHandle<Result<(), ListenError>> {
             let addrs = addrs.clone();
             let handler = self.handler.clone();
-            let global_state = self.global_state.clone();
+            let shared_state = self.shared_state.clone();
 
             thread::spawn(move || -> Result<(), ListenError> {
                 let mut core = Core::new()?;
                 let mut work = Vec::new();
                 let handle = core.handle();
-                let service = Service::new(handler, handle.clone(), global_state);
+                let service = Service::new(handler, handle.clone(), shared_state);
 
                 for addr in &addrs {
                     let handle = handle.clone();

@@ -10,6 +10,7 @@ use unsafe_any::UnsafeAny;
 use request::Request;
 use handler::{default_catch, Handler};
 use context::Context;
+use state::State;
 use util::typemap::TypeMap;
 use ext::BoxFuture;
 
@@ -23,7 +24,7 @@ where
 {
     handler: Arc<H>,
     handle: Handle,
-    global_state: Arc<TypeMap<UnsafeAny + Send + Sync>>,
+    shared_state: Arc<TypeMap<UnsafeAny + Send + Sync>>,
 }
 
 impl<H: Handler + 'static> Service<H>
@@ -33,12 +34,12 @@ where
     pub(crate) fn new(
         handler: Arc<H>,
         handle: Handle,
-        global_state: Arc<TypeMap<UnsafeAny + Send + Sync>>,
+        shared_state: Arc<TypeMap<UnsafeAny + Send + Sync>>,
     ) -> Self {
         Self {
             handler,
             handle,
-            global_state,
+            shared_state,
         }
     }
 }
@@ -51,7 +52,7 @@ where
         Self {
             handler: self.handler.clone(),
             handle: self.handle.clone(),
-            global_state: self.global_state.clone(),
+            shared_state: self.shared_state.clone(),
         }
     }
 }
@@ -67,7 +68,8 @@ where
 
     fn call(&self, request: Self::Request) -> Self::Future {
         let request = Request::new(request.deconstruct());
-        let ctx = Context::new(self.handle.clone(), request, self.global_state.clone());
+        let state = State::new(self.shared_state.clone());
+        let ctx = Context::new(self.handle.clone(), request, state);
         let handler = self.handler.clone();
 
         Box::new(

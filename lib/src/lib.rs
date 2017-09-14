@@ -1,5 +1,6 @@
 #![cfg_attr(feature = "cargo-clippy", warn(clippy, clippy_pedantic))]
 #![cfg_attr(feature = "cargo-clippy", allow(missing_docs_in_private_items))]
+#![cfg_attr(feature = "nightly", feature(specialization))]
 
 extern crate futures;
 extern crate hyper;
@@ -12,6 +13,7 @@ extern crate tokio_core;
 extern crate tokio_io;
 extern crate unsafe_any;
 
+pub mod state;
 pub mod context;
 mod handler;
 mod shio;
@@ -29,6 +31,7 @@ pub use response::Response;
 pub use request::Request;
 pub use shio::Shio;
 pub use context::Context;
+pub use state::State;
 pub use handler::Handler;
 
 /// Re-exports important traits and types. Meant to be glob imported when using Shio.
