@@ -47,7 +47,6 @@ where
     }
 }
 
-#[cfg_attr(feature = "cargo-clippy", allow(stutter))]
 pub type BoxHandler = Box<Handler<Result = BoxFuture<Response, hyper::Error>>>;
 
 impl<TError, TFuture, TFn> Handler for TFn

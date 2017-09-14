@@ -6,7 +6,6 @@ pub trait Future2 {
 }
 
 /// A type alias for Box<Item = T, Error = E>
-#[cfg_attr(feature = "cargo-clippy", allow(stutter))]
 pub type BoxFuture<T, E> = Box<Future<Item = T, Error = E>>;
 
 pub trait FutureExt: Future {
