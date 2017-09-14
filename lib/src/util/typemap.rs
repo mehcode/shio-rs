@@ -58,12 +58,6 @@ where
     data: HashMap<TypeId, Box<A>, BuildHasherDefault<TypeIdHasherValue>>,
 }
 
-impl TypeMap {
-    pub fn new() -> TypeMap {
-        TypeMap::custom()
-    }
-}
-
 /// This trait defines the relationship between keys and values in a `TypeMap`.
 ///
 /// It is implemented for Keys, with a phantom associated type for the values.
@@ -75,6 +69,13 @@ pub trait Key: Any {
 #[cfg(feature = "nightly")]
 default impl<T: 'static> Key for T {
     type Value = T;
+}
+
+impl TypeMap {
+    /// Create a new, empty TypeMap.
+    pub fn new() -> TypeMap {
+        TypeMap::custom()
+    }
 }
 
 impl<A: UnsafeAnyExt + ?Sized> TypeMap<A> {
