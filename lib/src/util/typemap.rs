@@ -7,27 +7,20 @@ use std::ptr;
 use unsafe_any::{UnsafeAny, UnsafeAnyExt};
 
 #[derive(Default)]
-pub struct TypeIdHasherValue {
+pub struct TypeIdHasher {
     value: u64,
 }
 
-impl Hasher for TypeIdHasherValue {
+impl Hasher for TypeIdHasher {
     fn finish(&self) -> u64 {
         self.value
     }
 
     fn write(&mut self, bytes: &[u8]) {
-        if bytes.len() != 8 {
-            panic!("unexpected len for typeid hash");
-        }
-
-        let buffer = &mut self.value as *mut u64;
-        let buffer = buffer as *mut u8;
-
-        let orig = bytes.as_ptr();
-
+        // This expects to receive one and exactly one 64-bit value
+        debug_assert!(bytes.len() == 8);
         unsafe {
-            ptr::copy_nonoverlapping(orig, buffer, 8);
+            ptr::copy_nonoverlapping(&bytes[0] as *const u8 as *const u64, &mut self.value, 1)
         }
     }
 }
@@ -55,7 +48,7 @@ pub struct TypeMap<A: ?Sized = UnsafeAny>
 where
     A: UnsafeAnyExt,
 {
-    data: HashMap<TypeId, Box<A>, BuildHasherDefault<TypeIdHasherValue>>,
+    data: HashMap<TypeId, Box<A>, BuildHasherDefault<TypeIdHasher>>,
 }
 
 /// This trait defines the relationship between keys and values in a `TypeMap`.
@@ -122,7 +115,7 @@ mod tests {
     use std::mem;
     use std::hash::{Hash, Hasher};
 
-    use super::{Key, TypeMap, TypeId, TypeIdHasherValue};
+    use super::{Key, TypeMap, TypeId, TypeIdHasher};
 
     #[derive(Debug, PartialEq)]
     struct KeyType;
@@ -146,7 +139,7 @@ mod tests {
     #[test]
     fn test_type_id_hasher() {
         fn verify_hashing_with(type_id: TypeId) {
-            let mut hasher = TypeIdHasherValue::default();
+            let mut hasher = TypeIdHasher::default();
             type_id.hash(&mut hasher);
 
             assert_eq!(hasher.finish(), unsafe { mem::transmute::<TypeId, u64>(type_id) });
