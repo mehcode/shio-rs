@@ -108,6 +108,35 @@ impl<A: UnsafeAnyExt + ?Sized> TypeMap<A> {
             .get(&TypeId::of::<K>())
             .map(|v| unsafe { v.downcast_ref_unchecked::<K::Value>() })
     }
+
+    /// Check if a key has an associated value stored in the map.
+    pub fn contains<K: Key>(&self) -> bool {
+        self.data.contains_key(&TypeId::of::<K>())
+    }
 }
 
 pub type ShareMap = TypeMap<UnsafeAny + Sync + Send>;
+
+#[cfg(test)]
+mod tests {
+    use super::{Key, TypeMap};
+
+    #[derive(Debug, PartialEq)]
+    struct KeyType;
+
+    #[derive(Clone, Debug, PartialEq)]
+    struct ValueType(u8);
+
+    impl Key for KeyType {
+        type Value = ValueType;
+    }
+
+    #[test]
+    fn test_key_value() {
+        let mut map = TypeMap::new();
+        map.insert::<KeyType>(ValueType(32));
+
+        assert_eq!(*map.get::<KeyType>().unwrap(), ValueType(32));
+        assert!(map.contains::<KeyType>());
+    }
+}
