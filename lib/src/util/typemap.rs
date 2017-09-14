@@ -76,7 +76,7 @@ impl<A: UnsafeAnyExt + ?Sized> TypeMap<A> {
     }
 
     /// Insert a value into the map with a specified key type.
-    pub fn insert<K: Key>(&mut self, val: K::Value) -> Option<K::Value>
+    pub fn put<K: Key>(&mut self, val: K::Value) -> Option<K::Value>
     where
         K::Value: Any + Implements<A>,
     {
@@ -85,8 +85,21 @@ impl<A: UnsafeAnyExt + ?Sized> TypeMap<A> {
             .map(|v| unsafe { *v.downcast_unchecked::<K::Value>() })
     }
 
-    /// Find a value in the map and get a reference to it.
-    pub fn get<K: Key>(&self) -> Option<&K::Value>
+    /// Gets a value from the type map.
+    ///
+    /// # Panics
+    ///
+    /// If there is no value in the request state of the given type.
+    pub fn get<K: Key>(&self) -> &K::Value
+    where
+        K::Value: Any + Implements<A>,
+    {
+        // FIXME: Don't use unwrap and explain the error
+        self.try_get::<K>().unwrap()
+    }
+
+    /// Attempt to get a value from the type map.
+    pub fn try_get<K: Key>(&self) -> Option<&K::Value>
     where
         K::Value: Any + Implements<A>,
     {
@@ -96,7 +109,7 @@ impl<A: UnsafeAnyExt + ?Sized> TypeMap<A> {
     }
 
     /// Check if a key has an associated value stored in the map.
-    pub fn contains<K: Key>(&self) -> bool {
+    pub fn has<K: Key>(&self) -> bool {
         self.data.contains_key(&TypeId::of::<K>())
     }
 }
@@ -123,10 +136,10 @@ mod tests {
     #[test]
     fn test_pair_key_to_value() {
         let mut map = TypeMap::new();
-        map.insert::<KeyType>(ValueType(32));
+        map.put::<KeyType>(ValueType(32));
 
-        assert_eq!(*map.get::<KeyType>().unwrap(), ValueType(32));
-        assert!(map.contains::<KeyType>());
+        assert_eq!(map.get::<KeyType>(), &ValueType(32));
+        assert!(map.has::<KeyType>());
     }
 
     #[test]
