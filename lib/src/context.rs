@@ -3,8 +3,8 @@ use std::ops::Deref;
 use tokio_core::reactor::Handle;
 
 use request::{Body, Request};
-use utils::typemap::TypeMap;
-pub use utils::typemap::Key;
+use util::typemap::TypeMap;
+pub use util::typemap::Key;
 
 /// `Context` represents the context of the current HTTP request.
 ///

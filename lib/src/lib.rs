@@ -22,7 +22,7 @@ pub mod response;
 pub mod request;
 pub mod errors;
 pub mod router;
-pub mod utils;
+pub mod util;
 
 pub use hyper::{header, Method, StatusCode};
 
