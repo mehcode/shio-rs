@@ -119,7 +119,10 @@ pub type ShareMap = TypeMap<UnsafeAny + Sync + Send>;
 
 #[cfg(test)]
 mod tests {
-    use super::{Key, TypeMap};
+    use std::mem;
+    use std::hash::{Hash, Hasher};
+
+    use super::{Key, TypeMap, TypeId, TypeIdHasherValue};
 
     #[derive(Debug, PartialEq)]
     struct KeyType;
@@ -138,5 +141,23 @@ mod tests {
 
         assert_eq!(*map.get::<KeyType>().unwrap(), ValueType(32));
         assert!(map.contains::<KeyType>());
+    }
+
+    #[test]
+    fn test_type_id_hasher() {
+        fn verify_hashing_with(type_id: TypeId) {
+            let mut hasher = TypeIdHasherValue::default();
+            type_id.hash(&mut hasher);
+
+            assert_eq!(hasher.finish(), unsafe { mem::transmute::<TypeId, u64>(type_id) });
+        }
+
+        // Pick a variety of types, just to demonstrate it’s all sane.
+        // Normal, zero-sized, unsized, &c.
+        verify_hashing_with(TypeId::of::<usize>());
+        verify_hashing_with(TypeId::of::<()>());
+        verify_hashing_with(TypeId::of::<str>());
+        verify_hashing_with(TypeId::of::<&str>());
+        verify_hashing_with(TypeId::of::<Vec<u8>>());
     }
 }
