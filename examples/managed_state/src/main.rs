@@ -5,16 +5,15 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use shio::prelude::*;
 use shio::context::Key;
 
-pub struct GlobalCounter;
+pub struct SharedCounter;
 
-impl Key for GlobalCounter {
+impl Key for SharedCounter {
     type Value = AtomicUsize;
 }
 
 fn hello(context: Context) -> Response {
-    let counter = context
-        .get_global::<GlobalCounter>()
-        .fetch_add(1, Ordering::Relaxed);
+    let counter = context.shared().get::<SharedCounter>().fetch_add(1, Ordering::Relaxed);
+
     Response::with(format!(
         "Hi, #{} (from thread: {:?})\n",
         counter,
@@ -24,7 +23,7 @@ fn hello(context: Context) -> Response {
 
 fn main() {
     Shio::default()
-        .manage::<GlobalCounter>(AtomicUsize::default())
+        .manage::<SharedCounter>(AtomicUsize::default())
         .route((Method::Get, "/", hello))
         .run(":7878")
         .unwrap();
