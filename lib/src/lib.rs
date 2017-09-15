@@ -3,6 +3,7 @@
 #![cfg_attr(feature = "nightly", feature(specialization))]
 
 extern crate futures;
+extern crate http as http_types;
 extern crate hyper;
 #[macro_use]
 extern crate log;

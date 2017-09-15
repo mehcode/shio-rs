@@ -54,7 +54,7 @@ fn index(ctx: Context) -> BoxFuture<Response, errors::Error> {
 
 fn main() {
     Shio::default()
-        .route((Method::Post, "/", index))
+        .route((Method::POST, "/", index))
         .run(":7878")
         .unwrap();
 }
