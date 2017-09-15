@@ -1,14 +1,11 @@
 
 use hyper::{self, Method};
 
-pub use data::Data;
-
 pub struct Request {
     method: Method,
     uri: hyper::Uri,
     version: hyper::HttpVersion,
     headers: hyper::Headers,
-    body: Data,
 }
 
 impl Request {
@@ -18,7 +15,6 @@ impl Request {
             hyper::Uri,
             hyper::HttpVersion,
             hyper::Headers,
-            hyper::Body,
         ),
     ) -> Self {
         Self {
@@ -26,7 +22,6 @@ impl Request {
             uri: components.1,
             version: components.2,
             headers: components.3,
-            body: Data::new(components.4),
         }
     }
 
@@ -58,11 +53,5 @@ impl Request {
     #[inline]
     pub fn path(&self) -> &str {
         self.uri.path()
-    }
-
-    /// Take the request body.
-    #[inline]
-    pub fn data(self) -> Data {
-        self.body
     }
 }
