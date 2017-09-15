@@ -58,7 +58,7 @@ where
     }
 }
 
-fn from_hyper(request: hyper::Request) -> (Request, Data) {
+pub(crate) fn from_hyper_request(request: hyper::Request) -> (Request, Data) {
     let (method, uri, version, header, body) = request.deconstruct();
     (
         Request::new((method, uri, version, header)),
@@ -76,7 +76,7 @@ where
     type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, request: Self::Request) -> Self::Future {
-        let (request, data) = from_hyper(request);
+        let (request, data) = from_hyper_request(request);
         let state = State::new(self.shared_state.clone());
         let ctx = Context::new(self.handle.clone(), request, state, data);
         let handler = self.handler.clone();
