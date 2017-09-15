@@ -13,6 +13,7 @@ use context::Context;
 use state::State;
 use util::typemap::TypeMap;
 use ext::BoxFuture;
+use Data;
 
 // FIXME: Why does #[derive(Clone)] not work here? This _seems_ like a implementation that
 //        should be auto-derived.
@@ -57,6 +58,14 @@ where
     }
 }
 
+pub(crate) fn from_hyper_request(request: hyper::Request) -> (Request, Data) {
+    let (method, uri, version, header, body) = request.deconstruct();
+    (
+        Request::new((method, uri, version, header)),
+        Data::new(body),
+    )
+}
+
 impl<H: Handler + 'static> hyper::server::Service for Service<H>
 where
     <H::Result as IntoFuture>::Error: fmt::Debug + Send,
@@ -67,9 +76,9 @@ where
     type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, request: Self::Request) -> Self::Future {
-        let request = Request::new(request.deconstruct());
+        let (request, data) = from_hyper_request(request);
         let state = State::new(self.shared_state.clone());
-        let ctx = Context::new(self.handle.clone(), request, state);
+        let ctx = Context::new(self.handle.clone(), request, state, data);
         let handler = self.handler.clone();
 
         Box::new(

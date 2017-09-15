@@ -4,8 +4,9 @@ use tokio_core::reactor::Handle;
 use unsafe_any::UnsafeAny;
 
 use util::typemap::TypeMap;
-use request::{Body, Request};
-use state::{State, FromState};
+use request::Request;
+use state::{FromState, State};
+use Data;
 pub use state::Key;
 
 /// `Context` represents the context of the current HTTP request.
@@ -23,18 +24,16 @@ pub struct Context {
     state: State,
     handle: Handle,
     request: Request,
+    body: Data,
 }
 
 impl Context {
-    pub(crate) fn new(
-        handle: Handle,
-        request: Request,
-        state: State,
-    ) -> Self {
+    pub(crate) fn new(handle: Handle, request: Request, state: State, body: Data) -> Self {
         Self {
             handle,
             request,
             state,
+            body,
         }
     }
 
@@ -45,8 +44,8 @@ impl Context {
     }
 
     /// Take the request body.
-    pub fn body(self) -> Body {
-        self.request.body()
+    pub fn data(self) -> Data {
+        self.body
     }
 
     /// Puts a value into the request state.
@@ -74,6 +73,11 @@ impl Context {
     /// Gets a reference to the shared state.
     pub fn shared(&self) -> &TypeMap<UnsafeAny + Send + Sync> {
         self.state.shared()
+    }
+
+    /// Deconstruct current context
+    pub fn deconstruct(self) -> (Handle, State, Request, Data) {
+        (self.handle, self.state, self.request, self.body)
     }
 }
 

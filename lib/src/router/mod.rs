@@ -127,7 +127,7 @@ mod tests {
     use hyper;
 
     use super::{Parameters, Router};
-    use {Context, Handler, State, Request, Response, StatusCode};
+    use {Context, Handler, Response, State, StatusCode};
     use Method::*;
 
     // Empty handler to use for route tests
@@ -209,10 +209,8 @@ mod tests {
         // TODO: It should much easier to make a test context
         //       Perhaps `Request::build ( .. )` should be a thing?
         //       Proxied as `Context::build ( .. )` ?
-        let request = Request::new(
-            hyper::Request::new(Get, "/user/3289".parse().unwrap()).deconstruct(),
-        );
-        let context = Context::new(core.handle(), request, State::default());
+        let (request, data) = ::service::from_hyper_request(hyper::Request::new(Get, "/user/3289".parse().unwrap()));
+        let context = Context::new(core.handle(), request, State::default(), data);
 
         let work = router.call(context);
 
@@ -247,10 +245,8 @@ mod tests {
 
         let mut core = Core::new().unwrap();
 
-        let request = Request::new(
-            hyper::Request::new(Get, "/static/path/to/file/is/here".parse().unwrap()).deconstruct(),
-        );
-        let context = Context::new(core.handle(), request, State::default());
+        let (request, data) = ::service::from_hyper_request(hyper::Request::new(Get, "/static/path/to/file/is/here".parse().unwrap()));
+        let context = Context::new(core.handle(), request, State::default(), data);
 
         let work = router.call(context);
 

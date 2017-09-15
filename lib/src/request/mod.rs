@@ -1,33 +1,22 @@
-mod body;
 
 use hyper::{self, Method};
-
-pub use self::body::Body;
 
 pub struct Request {
     method: Method,
     uri: hyper::Uri,
     version: hyper::HttpVersion,
     headers: hyper::Headers,
-    body: Body,
 }
 
 impl Request {
     pub(crate) fn new(
-        components: (
-            Method,
-            hyper::Uri,
-            hyper::HttpVersion,
-            hyper::Headers,
-            hyper::Body,
-        ),
+        components: (Method, hyper::Uri, hyper::HttpVersion, hyper::Headers),
     ) -> Self {
         Self {
             method: components.0,
             uri: components.1,
             version: components.2,
             headers: components.3,
-            body: Body::new(components.4),
         }
     }
 
@@ -59,11 +48,5 @@ impl Request {
     #[inline]
     pub fn path(&self) -> &str {
         self.uri.path()
-    }
-
-    /// Take the request body.
-    #[inline]
-    pub fn body(self) -> Body {
-        self.body
     }
 }

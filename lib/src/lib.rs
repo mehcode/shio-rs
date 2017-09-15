@@ -10,7 +10,6 @@ extern crate net2;
 extern crate num_cpus;
 extern crate regex;
 extern crate tokio_core;
-extern crate tokio_io;
 extern crate unsafe_any;
 
 pub mod state;
@@ -24,6 +23,7 @@ pub mod request;
 pub mod errors;
 pub mod router;
 pub mod util;
+pub mod data;
 
 pub use hyper::{header, Method, StatusCode};
 
@@ -33,12 +33,14 @@ pub use shio::Shio;
 pub use context::Context;
 pub use state::State;
 pub use handler::Handler;
+pub use data::Data;
+pub use errors::Error;
 
 /// Re-exports important traits and types. Meant to be glob imported when using Shio.
 pub mod prelude {
     pub use super::{header, Context, Method, Request, Response, Shio, StatusCode};
     pub use super::router::Parameters;
 
-    pub use futures::{Future, IntoFuture};
+    pub use futures::{Future, Stream, IntoFuture};
     pub use ext::{BoxFuture, FutureExt};
 }
