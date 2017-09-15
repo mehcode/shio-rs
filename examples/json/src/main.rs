@@ -2,7 +2,6 @@
 extern crate serde;
 extern crate serde_json;
 extern crate shio;
-extern crate tokio_io;
 
 #[macro_use]
 extern crate error_chain;
@@ -10,13 +9,12 @@ extern crate error_chain;
 #[macro_use]
 extern crate serde_derive;
 
-use tokio_io::io;
 use shio::prelude::*;
 
 mod errors {
     error_chain! {
         foreign_links {
-            Io(::std::io::Error);
+            Shio(::shio::Error);
             Json(::serde_json::Error);
         }
     }
@@ -35,18 +33,16 @@ struct ResponseBody {
 }
 
 fn index(ctx: Context) -> BoxFuture<Response, errors::Error> {
-    // `tokio_io::io::read_to_end` will asynchronously read the request body, to completion,
-    // and place it in the new vector.
-    io::read_to_end(ctx.data(), Vec::new())
+    // `concat2` will asynchronously read each chunk of the request body and
+    // return a single, concatenated, chunk
+    ctx.data().concat2()
         // `Future::from_err` acts like `?` in that it coerces the error type from
         // the future into the final error type
         .from_err()
         // `Future::and_then` can be used to merge an asynchronous workflow with a
         // synchronous workflow
-        //
-        // `read_to_end` resolves to a tuple of our reader ( `Context` ) and the buffer.
-        .and_then(|(_, buffer)| /* -> errors::Result<Response> */ {
-            let body: RequestBody = serde_json::from_slice(&buffer)?;
+        .and_then(|data| /* -> errors::Result<Response> */ {
+            let body: RequestBody = serde_json::from_slice(&data)?;
             let s = serde_json::to_string(&ResponseBody { id: 20, name: body.name })?;
 
             Ok(Response::build().header(header::ContentType::json()).body(s))

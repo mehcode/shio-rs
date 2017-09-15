@@ -1,8 +1,10 @@
 //! Types representing errors that can occur from inside Shio.
 
 use std::fmt;
-use std::error::Error;
+use std::error::Error as StdError;
 use std::io;
+
+use hyper;
 
 /// An error that occurs during `Shio::listen` or `Shio::run`.
 #[derive(Debug)]
@@ -18,14 +20,14 @@ impl fmt::Display for ListenError {
     }
 }
 
-impl Error for ListenError {
+impl StdError for ListenError {
     fn description(&self) -> &str {
         match self.inner {
             ListenErrorKind::Io(ref err) => err.description(),
         }
     }
 
-    fn cause(&self) -> Option<&Error> {
+    fn cause(&self) -> Option<&StdError> {
         match self.inner {
             ListenErrorKind::Io(ref err) => err.cause(),
         }
@@ -46,5 +48,52 @@ pub enum ListenErrorKind {
 impl From<io::Error> for ListenErrorKind {
     fn from(err: io::Error) -> Self {
         ListenErrorKind::Io(err)
+    }
+}
+
+/// A generic "error" that can occur from inside Shio.
+#[derive(Debug)]
+pub struct Error { inner: ErrorKind }
+
+#[derive(Debug)]
+enum ErrorKind {
+    Listen(ListenError),
+    Hyper(hyper::Error),
+}
+
+impl From<ListenError> for Error {
+    fn from(err: ListenError) -> Self {
+        Self { inner: ErrorKind::Listen(err) }
+    }
+}
+
+impl From<hyper::Error> for Error {
+    fn from(err: hyper::Error) -> Self {
+        Self { inner: ErrorKind::Hyper(err) }
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.inner {
+            ErrorKind::Hyper(ref err) => err.fmt(f),
+            ErrorKind::Listen(ref err) => err.fmt(f),
+        }
+    }
+}
+
+impl StdError for Error {
+    fn description(&self) -> &str {
+        match self.inner {
+            ErrorKind::Hyper(ref err) => err.description(),
+            ErrorKind::Listen(ref err) => err.description(),
+        }
+    }
+
+    fn cause(&self) -> Option<&StdError> {
+        match self.inner {
+            ErrorKind::Hyper(ref err) => err.cause(),
+            ErrorKind::Listen(ref err) => err.cause(),
+        }
     }
 }
