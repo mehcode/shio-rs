@@ -80,7 +80,7 @@ fn index(ctx: Context) -> BoxFuture<Response, Error> {
 
             Ok(
                 Response::build()
-                    .header(header::ContentType::json())
+                    .header(http::header::ContentType::json())
                     .body(s),
             )
         })

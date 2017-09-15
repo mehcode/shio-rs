@@ -6,7 +6,7 @@ use shio::prelude::*;
 fn redirect_to(_: Context) -> Response {
     Response::build()
         .status(StatusCode::SeeOther)
-        .header(shio::header::Location::new("/redirected"))
+        .header(http::header::Location::new("/redirected"))
         .into()
 }
 
