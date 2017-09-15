@@ -4,8 +4,9 @@ use tokio_core::reactor::Handle;
 use unsafe_any::UnsafeAny;
 
 use util::typemap::TypeMap;
-use request::{Body, Request};
+use request::Request;
 use state::{State, FromState};
+use Data;
 pub use state::Key;
 
 /// `Context` represents the context of the current HTTP request.
@@ -45,8 +46,8 @@ impl Context {
     }
 
     /// Take the request body.
-    pub fn body(self) -> Body {
-        self.request.body()
+    pub fn data(self) -> Data {
+        self.request.data()
     }
 
     /// Puts a value into the request state.

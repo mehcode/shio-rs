@@ -24,6 +24,7 @@ pub mod request;
 pub mod errors;
 pub mod router;
 pub mod util;
+pub mod data;
 
 pub use hyper::{header, Method, StatusCode};
 
@@ -33,6 +34,7 @@ pub use shio::Shio;
 pub use context::Context;
 pub use state::State;
 pub use handler::Handler;
+pub use data::Data;
 
 /// Re-exports important traits and types. Meant to be glob imported when using Shio.
 pub mod prelude {

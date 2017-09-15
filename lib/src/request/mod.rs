@@ -1,15 +1,14 @@
-mod body;
 
 use hyper::{self, Method};
 
-pub use self::body::Body;
+pub use data::Data;
 
 pub struct Request {
     method: Method,
     uri: hyper::Uri,
     version: hyper::HttpVersion,
     headers: hyper::Headers,
-    body: Body,
+    body: Data,
 }
 
 impl Request {
@@ -27,7 +26,7 @@ impl Request {
             uri: components.1,
             version: components.2,
             headers: components.3,
-            body: Body::new(components.4),
+            body: Data::new(components.4),
         }
     }
 
@@ -63,7 +62,7 @@ impl Request {
 
     /// Take the request body.
     #[inline]
-    pub fn body(self) -> Body {
+    pub fn data(self) -> Data {
         self.body
     }
 }

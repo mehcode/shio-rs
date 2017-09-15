@@ -4,7 +4,7 @@ use hyper;
 use tokio_io::AsyncRead;
 use futures::{Async, Poll, Stream};
 
-pub struct Body {
+pub struct Data {
     body: hyper::Body,
 
     // Used as a buffer when reading the body through `tokio_io::AsyncRead`. This should
@@ -13,20 +13,20 @@ pub struct Body {
     chunk: Option<(hyper::Chunk, usize)>,
 }
 
-impl Body {
+impl Data {
     pub(crate) fn new(body: hyper::Body) -> Self {
         Self { body, chunk: None }
     }
 }
 
-impl Default for Body {
+impl Default for Data {
     fn default() -> Self {
         Self::new(Default::default())
     }
 }
 
 fn read_from_chunk(
-    body: &mut Body,
+    body: &mut Data,
     chunk: hyper::Chunk,
     mut buf: &mut [u8],
     index: usize,
@@ -42,7 +42,7 @@ fn read_from_chunk(
     Ok(written)
 }
 
-impl Read for Body {
+impl Read for Data {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         if let Some((chunk, index)) = self.chunk.take() {
             return read_from_chunk(self, chunk, buf, index);
@@ -63,9 +63,9 @@ impl Read for Body {
     }
 }
 
-impl AsyncRead for Body {}
+impl AsyncRead for Data {}
 
-impl Stream for Body {
+impl Stream for Data {
     type Item = hyper::Chunk;
     type Error = hyper::Error;
 
