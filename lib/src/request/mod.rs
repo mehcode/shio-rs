@@ -10,12 +10,7 @@ pub struct Request {
 
 impl Request {
     pub(crate) fn new(
-        components: (
-            Method,
-            hyper::Uri,
-            hyper::HttpVersion,
-            hyper::Headers,
-        ),
+        components: (Method, hyper::Uri, hyper::HttpVersion, hyper::Headers),
     ) -> Self {
         Self {
             method: components.0,

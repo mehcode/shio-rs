@@ -84,10 +84,10 @@ where
     <T as Key>::Value: Send + Sync,
 {
     default fn from_state(state: &State) -> &<T as Key>::Value {
-                state
-                    .shared
-                    .try_get::<T>()
-                    .or_else(|| state.request.try_get::<T>())
+        state
+            .shared
+            .try_get::<T>()
+            .or_else(|| state.request.try_get::<T>())
     }
 }
 

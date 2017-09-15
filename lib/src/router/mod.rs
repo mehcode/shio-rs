@@ -127,7 +127,7 @@ mod tests {
     use hyper;
 
     use super::{Parameters, Router};
-    use {Context, Handler, State, Request, Response, StatusCode};
+    use {Context, Handler, Request, Response, State, StatusCode};
     use Method::*;
 
     // Empty handler to use for route tests

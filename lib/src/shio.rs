@@ -9,7 +9,7 @@ use hyper::server::Http;
 use tokio_core::net::TcpListener;
 use tokio_core::reactor::Core;
 use net2::TcpBuilder;
-use util::typemap::{TypeMap, Key};
+use util::typemap::{Key, TypeMap};
 use unsafe_any::UnsafeAny;
 
 #[cfg(unix)]

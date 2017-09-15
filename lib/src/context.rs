@@ -5,7 +5,7 @@ use unsafe_any::UnsafeAny;
 
 use util::typemap::TypeMap;
 use request::Request;
-use state::{State, FromState};
+use state::{FromState, State};
 use Data;
 pub use state::Key;
 
@@ -28,12 +28,7 @@ pub struct Context {
 }
 
 impl Context {
-    pub(crate) fn new(
-        handle: Handle,
-        request: Request,
-        state: State,
-        body: Data,
-    ) -> Self {
+    pub(crate) fn new(handle: Handle, request: Request, state: State, body: Data) -> Self {
         Self {
             handle,
             request,

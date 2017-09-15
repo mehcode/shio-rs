@@ -60,7 +60,10 @@ where
 
 fn from_hyper(request: hyper::Request) -> (Request, Data) {
     let (method, uri, version, header, body) = request.deconstruct();
-    (Request::new((method, uri, version, header)), Data::new(body))
+    (
+        Request::new((method, uri, version, header)),
+        Data::new(body),
+    )
 }
 
 impl<H: Handler + 'static> hyper::server::Service for Service<H>
