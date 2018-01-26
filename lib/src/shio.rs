@@ -120,11 +120,13 @@ where
         while !children.is_empty() {
             let respawn = 'outer: loop {
                 for child in children.drain(..) {
-                    if child.join().is_err() {
+                    match child.join() {
+                        Ok(Ok(_)) => continue,
+                        Ok(Err(e)) => return Err(e),
                         // Thread panicked; spawn another one
                         // TODO: Should there be any sort of limit/backoff here?
-                        break 'outer true;
-                    }
+                        Err(_) => break 'outer true
+                    };
                 }
 
                 break false;
