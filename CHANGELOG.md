@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.2.1] - 2018-01-26
+## [0.3.0] - 2018-01-26
  - Moved StatusCode, Method, header to `shio::http::*`
  - Handle errors from listener threads failing to start [#39](https://github.com/mehcode/shio-rs/pull/39)
 
@@ -137,7 +137,8 @@ No significant changes.
   - Asynchronous `Handler` that can be a simple function.
   - Service for `tokio` that is a multithreaded abstraction over `Handler`.
 
-[Unreleased]: ../../compare/v0.2.0...HEAD
+[Unreleased]: ../../compare/v0.3.0...HEAD
+[0.3.0]: ../../compare/v0.2.0...v0.3.0
 [0.2.0]: ../../compare/v0.2.0...v0.1.0
 [0.1.0]: ../../compare/v0.1.0...v0.0.8
 [0.0.8]: ../../compare/v0.0.8...v0.0.7
